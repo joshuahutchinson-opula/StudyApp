@@ -23,6 +23,7 @@ export async function taskRoutes(app: FastifyInstance) {
     title: z.string().min(1),
     status: z.enum(["backlog", "todo", "in_progress", "done"]).default("backlog"),
     dueAt: z.coerce.date().nullable().optional(),
+    parentTaskId: z.string().uuid().optional(),
   });
 
   app.post("/tasks", async (req, reply) => {
@@ -36,6 +37,7 @@ export async function taskRoutes(app: FastifyInstance) {
         title: body.data.title,
         status: body.data.status,
         dueAt: body.data.dueAt ?? null,
+        parentTaskId: body.data.parentTaskId ?? null,
       },
     });
   });

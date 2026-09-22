@@ -17,44 +17,124 @@ function relativeDay(dueAt: string): string {
   return `in ${days}d`;
 }
 
+function MoveButtons({ status, onMove }: { status: TaskStatus; onMove: (status: TaskStatus) => void }) {
+  const currentIdx = COLUMNS.findIndex((c) => c.status === status);
+  return (
+    <div className="flex gap-1">
+      {currentIdx > 0 && (
+        <button
+          type="button"
+          onClick={() => onMove(COLUMNS[currentIdx - 1]!.status)}
+          className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          aria-label={`Move back to ${COLUMNS[currentIdx - 1]!.label}`}
+        >
+          ‹
+        </button>
+      )}
+      {currentIdx < COLUMNS.length - 1 && (
+        <button
+          type="button"
+          onClick={() => onMove(COLUMNS[currentIdx + 1]!.status)}
+          className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          aria-label={`Move forward to ${COLUMNS[currentIdx + 1]!.label}`}
+        >
+          ›
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Subtasks nest inside their parent's card (Linear-style sub-issues) rather
+// than appearing as separate board cards in their own column — a subtask's
+// status can legitimately differ from its parent's, and letting it float to
+// a different kanban column would make the hierarchy invisible.
 function TaskCard({
   task,
+  subtasks,
   onMove,
+  onMoveSubtask,
+  onAddSubtask,
 }: {
   task: Task;
+  subtasks: Task[];
   onMove: (status: TaskStatus) => void;
+  onMoveSubtask: (subtaskId: string, status: TaskStatus) => void;
+  onAddSubtask: (title: string) => void;
 }) {
-  const currentIdx = COLUMNS.findIndex((c) => c.status === task.status);
+  const [addingSubtask, setAddingSubtask] = useState(false);
+  const doneCount = subtasks.filter((s) => s.status === "done").length;
+
   return (
     <div className="rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
       <p className="text-sm">{task.title}</p>
       <div className="mt-2 flex items-center justify-between">
         <span className="text-xs text-[var(--color-text-muted)]">
-          {task.dueAt ? relativeDay(task.dueAt as unknown as string) : ""}
+          {subtasks.length > 0
+            ? `${doneCount}/${subtasks.length} subtasks`
+            : task.dueAt
+              ? relativeDay(task.dueAt as unknown as string)
+              : ""}
         </span>
-        <div className="flex gap-1">
-          {currentIdx > 0 && (
-            <button
-              type="button"
-              onClick={() => onMove(COLUMNS[currentIdx - 1]!.status)}
-              className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              aria-label={`Move back to ${COLUMNS[currentIdx - 1]!.label}`}
-            >
-              ‹
-            </button>
-          )}
-          {currentIdx < COLUMNS.length - 1 && (
-            <button
-              type="button"
-              onClick={() => onMove(COLUMNS[currentIdx + 1]!.status)}
-              className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-              aria-label={`Move forward to ${COLUMNS[currentIdx + 1]!.label}`}
-            >
-              ›
-            </button>
-          )}
-        </div>
+        <MoveButtons status={task.status} onMove={onMove} />
       </div>
+
+      {subtasks.length > 0 && (
+        <ul className="mt-2 flex flex-col gap-1 border-t border-[var(--color-border)] pt-2">
+          {subtasks.map((s) => (
+            <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => onMoveSubtask(s.id, s.status === "done" ? "todo" : "done")}
+                className="flex flex-1 items-center gap-1.5 text-left"
+                style={{
+                  color: s.status === "done" ? "var(--color-text-muted)" : "var(--color-text)",
+                  textDecoration: s.status === "done" ? "line-through" : "none",
+                }}
+              >
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-full border"
+                  style={{
+                    borderColor: "var(--color-accent)",
+                    background: s.status === "done" ? "var(--color-accent)" : "transparent",
+                  }}
+                />
+                {s.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {addingSubtask ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const input = e.currentTarget.elements.namedItem("title") as HTMLInputElement;
+            if (!input.value.trim()) return;
+            onAddSubtask(input.value.trim());
+            setAddingSubtask(false);
+          }}
+          className="mt-2"
+        >
+          <input
+            name="title"
+            autoFocus
+            onBlur={() => setAddingSubtask(false)}
+            placeholder="Subtask title…"
+            className="w-full rounded-sm border border-[var(--color-border)] bg-transparent px-1.5 py-1 text-xs focus:outline-none"
+          />
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAddingSubtask(true)}
+          className="mt-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
+          + subtask
+        </button>
+      )}
     </div>
   );
 }
@@ -161,7 +241,10 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
       ) : (
         <div className="grid flex-1 grid-cols-4 gap-4">
           {COLUMNS.map((col) => {
-            const colTasks = tasks.filter((t) => t.status === col.status);
+            // Only top-level tasks get their own column position — a subtask
+            // renders nested inside its parent's card regardless of which
+            // column that parent is in (see TaskCard).
+            const colTasks = tasks.filter((t) => t.status === col.status && !t.parentTaskId);
             return (
               <div key={col.status} className="flex flex-col gap-2">
                 <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -172,11 +255,16 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
                     <TaskCard
                       key={task.id}
                       task={task}
+                      subtasks={tasks.filter((t) => t.parentTaskId === task.id)}
                       onMove={(status) => updateStatus.mutate({ taskId: task.id, status })}
+                      onMoveSubtask={(subtaskId, status) => updateStatus.mutate({ taskId: subtaskId, status })}
+                      onAddSubtask={(title) => createTask.mutate({ title, parentTaskId: task.id })}
                     />
                   ))}
                 </div>
-                {col.status === "backlog" && <QuickAdd onAdd={(title) => createTask.mutate(title)} />}
+                {col.status === "backlog" && (
+                  <QuickAdd onAdd={(title) => createTask.mutate({ title })} />
+                )}
               </div>
             );
           })}

@@ -19,7 +19,8 @@ export function useDeadlines(userId: string) {
 export function useCreateTask(userId: string, discipline: Discipline) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (title: string) => api.post<Task>("/tasks", { userId, discipline, title }),
+    mutationFn: ({ title, parentTaskId }: { title: string; parentTaskId?: string }) =>
+      api.post<Task>("/tasks", { userId, discipline, title, parentTaskId }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tasks", userId, discipline] });
     },
