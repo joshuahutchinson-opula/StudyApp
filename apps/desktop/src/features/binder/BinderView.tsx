@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { DEMO_USER_ID } from "@the-desk/shared";
 import { useBinder, useUpdatePage } from "./api";
+import { useDueCards } from "../review/api";
 import { PageTurn } from "./PageTurn";
 import { PageContent } from "./PageContent";
 import { TabRail } from "./TabRail";
@@ -8,9 +10,16 @@ import { MasteryControl, DogEar } from "./MasteryControl";
 
 type DisplayItem = { type: "toc" } | { type: "page"; pageId: string };
 
-export function BinderView({ binderId }: { binderId: string }) {
+export function BinderView({
+  binderId,
+  onOpenReview,
+}: {
+  binderId: string;
+  onOpenReview: () => void;
+}) {
   const { data: binder, isLoading } = useBinder(binderId);
   const updatePage = useUpdatePage(binderId);
+  const { data: dueCards } = useDueCards(DEMO_USER_ID);
   const [index, setIndex] = useState(0);
   const [navDirection, setNavDirection] = useState<1 | -1 | 0>(0);
 
@@ -60,13 +69,25 @@ export function BinderView({ binderId }: { binderId: string }) {
             {binder.title}
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={() => goTo(0)}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        >
-          Contents
-        </button>
+        <div className="flex items-center gap-4">
+          {dueCards && dueCards.length > 0 && (
+            <button
+              type="button"
+              onClick={onOpenReview}
+              className="rounded-full px-3 py-1 text-sm"
+              style={{ background: "var(--color-accent)", color: "#fff" }}
+            >
+              Review · {dueCards.length} due
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => goTo(0)}
+            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            Contents
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 gap-4 px-4 py-4">

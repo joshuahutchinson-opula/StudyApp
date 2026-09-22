@@ -52,7 +52,7 @@ async function main() {
     data: { binderId: binder.id, label: "Valvular Disease", color: "#4b8fa6", order: 2 },
   });
 
-  await db.page.create({
+  const hfrefPage = await db.page.create({
     data: {
       binderId: binder.id,
       tabDividerId: heartFailure.id,
@@ -74,7 +74,7 @@ async function main() {
     },
   });
 
-  await db.page.create({
+  const gdmtPage = await db.page.create({
     data: {
       binderId: binder.id,
       tabDividerId: heartFailure.id,
@@ -95,7 +95,7 @@ async function main() {
     },
   });
 
-  await db.page.create({
+  const afibPage = await db.page.create({
     data: {
       binderId: binder.id,
       tabDividerId: arrhythmias.id,
@@ -133,6 +133,34 @@ async function main() {
         paragraph("Symptomatic severe AS (angina, syncope, heart failure) is a class I indication for valve replacement (SAVR or TAVR)."),
       ],
     },
+  });
+
+  const dueNow = new Date(Date.now() - 60 * 60 * 1000); // 1h in the past, so it's immediately due
+
+  await db.spacedRepetitionCard.createMany({
+    data: [
+      {
+        userId: DEMO_USER_ID,
+        sourcePageId: hfrefPage.id,
+        front: "EF cutoff that defines HFrEF vs HFpEF?",
+        back: "HFrEF: EF ≤ 40%. HFpEF: EF ≥ 50% (41-49% is HFmrEF).",
+        dueAt: dueNow,
+      },
+      {
+        userId: DEMO_USER_ID,
+        sourcePageId: gdmtPage.id,
+        front: "Name the four pillars of GDMT in HFrEF.",
+        back: "ARNI (or ACEi/ARB), beta-blocker, MRA, SGLT2 inhibitor — started in parallel, not sequentially.",
+        dueAt: dueNow,
+      },
+      {
+        userId: DEMO_USER_ID,
+        sourcePageId: afibPage.id,
+        front: "What two risk scores are calculated for new-onset AFib?",
+        back: "CHA2DS2-VASc (stroke risk) and HAS-BLED (bleeding risk).",
+        dueAt: dueNow,
+      },
+    ],
   });
 
   console.log(`Seeded demo Medicine binder ${binder.id} for user ${DEMO_USER_ID}`);
