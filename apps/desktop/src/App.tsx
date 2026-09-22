@@ -5,6 +5,7 @@ import { useDisciplineStore } from "./store/useDisciplineStore";
 import { useBinders } from "./features/binder/api";
 import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
+import { PlannerView } from "./features/planner/PlannerView";
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   return (
@@ -44,32 +45,61 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-function Desk({ discipline }: { discipline: Discipline }) {
+type Mode = "binder" | "planner" | "review";
+
+function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
   const { data: binders, isLoading } = useBinders(DEMO_USER_ID);
   const binder = binders?.find((b) => b.discipline === discipline);
-  const [mode, setMode] = useState<"binder" | "review">("binder");
+  const [mode, setMode] = useState<Mode>("binder");
 
   if (isLoading) {
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
   }
 
-  if (binder) {
-    if (mode === "review") {
-      return <ReviewSession userId={DEMO_USER_ID} onExit={() => setMode("binder")} />;
-    }
-    return <BinderView binderId={binder.id} onOpenReview={() => setMode("review")} />;
-  }
-
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6">
-      <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>
-      <h1 className="text-3xl" style={{ fontFamily: "var(--font-display)" }}>
-        {meta.tagline}
-      </h1>
-      <p className="mt-8 text-sm text-[var(--color-text-muted)]">
-        No binder yet for this discipline — the Medicine binder is the only one built so far.
-      </p>
+    <div className="flex min-h-screen flex-col">
+      <div className="flex items-center gap-5 border-b border-[var(--color-border)] px-4 py-2 text-sm">
+        <button type="button" onClick={onSwitchDiscipline} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+          The Desk
+        </button>
+        <span className="text-[var(--color-border)]">/</span>
+        {(["binder", "planner"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className="capitalize"
+            style={{
+              color: mode === m ? "var(--color-text)" : "var(--color-text-muted)",
+              fontWeight: mode === m ? 600 : 400,
+            }}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1">
+        {mode === "planner" && <PlannerView userId={DEMO_USER_ID} discipline={discipline} />}
+
+        {mode === "review" && <ReviewSession userId={DEMO_USER_ID} onExit={() => setMode("binder")} />}
+
+        {mode === "binder" &&
+          (binder ? (
+            <BinderView binderId={binder.id} onOpenReview={() => setMode("review")} />
+          ) : (
+            <div className="mx-auto flex max-w-2xl flex-col justify-center px-6 py-20">
+              <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>
+              <h1 className="text-3xl" style={{ fontFamily: "var(--font-display)" }}>
+                {meta.tagline}
+              </h1>
+              <p className="mt-8 text-sm text-[var(--color-text-muted)]">
+                No binder yet for this discipline — try Planner above, or switch to Medicine for the full binder.
+              </p>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
@@ -90,5 +120,10 @@ export default function App() {
     return <DisciplinePicker onSelect={setDiscipline} />;
   }
 
-  return <Desk discipline={activeDiscipline} />;
+  return (
+    <Desk
+      discipline={activeDiscipline}
+      onSwitchDiscipline={() => useDisciplineStore.setState({ activeDiscipline: null })}
+    />
+  );
 }

@@ -163,6 +163,26 @@ async function main() {
     ],
   });
 
+  const inDays = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+
+  await db.task.createMany({
+    data: [
+      { userId: DEMO_USER_ID, discipline: "medicine", title: "Write up SOAP note for bed 4", status: "todo", dueAt: inDays(1) },
+      { userId: DEMO_USER_ID, discipline: "medicine", title: "Read up on HFpEF trials (DELIVER, EMPEROR-Preserved)", status: "todo", dueAt: inDays(3) },
+      { userId: DEMO_USER_ID, discipline: "medicine", title: "Prep differential for tomorrow's case presentation", status: "in_progress", dueAt: inDays(1) },
+      { userId: DEMO_USER_ID, discipline: "medicine", title: "Shadow echo read with attending", status: "backlog", dueAt: null },
+      { userId: DEMO_USER_ID, discipline: "medicine", title: "Submit rotation self-evaluation", status: "done", dueAt: inDays(-2) },
+    ],
+  });
+
+  await db.deadline.createMany({
+    data: [
+      { userId: DEMO_USER_ID, title: "Cardiology shelf exam", dueAt: inDays(9), source: "manual" },
+      { userId: DEMO_USER_ID, title: "Case presentation due", dueAt: inDays(1), source: "manual" },
+      { userId: DEMO_USER_ID, title: "Rotation evaluation deadline", dueAt: inDays(14), source: "manual" },
+    ],
+  });
+
   console.log(`Seeded demo Medicine binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 
