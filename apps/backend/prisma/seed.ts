@@ -349,6 +349,351 @@ log("a"); log("b"); log("c");
   console.log(`Seeded demo Software binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 
+// Completes the five-discipline picture with minimal but real content — not a
+// flagship build (no signature feature yet), just enough to prove the same
+// binder/planner/spaced-repetition spine holds up here too.
+async function seedWriting() {
+  const existing = await db.binder.findFirst({ where: { userId: DEMO_USER_ID, discipline: "writing" } });
+  if (existing) {
+    console.log("Demo Writing binder already exists, skipping seed.");
+    return;
+  }
+
+  const binder = await db.binder.create({
+    data: { userId: DEMO_USER_ID, discipline: "writing", title: "The Long-Form Desk" },
+  });
+
+  const drafts = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Drafts", color: "#a3512b", order: 0 },
+  });
+  const sources = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Interviews & Sources", color: "#6b6255", order: 1 },
+  });
+  const pitches = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Pitches", color: "#3d3226", order: 2 },
+  });
+
+  const draftPage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: drafts.id,
+      title: "Draft 2 — Opening",
+      order: 0,
+      masteryLevel: "learning",
+      reviewed: true,
+      content: [
+        heading(1, "The Last Print Run"),
+        paragraph(
+          "The press at Fifth Street ran for the final time on a Tuesday, and nobody thought to take a photo until it had already stopped.",
+        ),
+        paragraph(
+          "Draft note: open on the sound, not the fact — readers need to feel the machine before they're told what it means.",
+        ),
+      ],
+    },
+  });
+
+  const interviewPage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: sources.id,
+      title: "Interview Log — M. Alvarez, pressroom foreman",
+      order: 1,
+      masteryLevel: "familiar",
+      reviewed: true,
+      content: [
+        heading(1, "M. Alvarez — 22 years on the floor"),
+        list(false, [
+          "On the last run: \"You could hear it slowing down before the readout said anything.\"",
+          "On the crew: 14 people, 6 kept on for digital prepress, rest laid off",
+          "Follow-up needed: get exact final page count for the record",
+        ]),
+      ],
+    },
+  });
+
+  await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: pitches.id,
+      title: "Pitch — Regional desk",
+      order: 2,
+      masteryLevel: "unfamiliar",
+      reviewed: false,
+      content: [
+        heading(1, "Pitch: \"The Last Print Run\""),
+        paragraph(
+          "1,800 words, feature. The closure of the Fifth Street press as a lens on what a town loses when the paper stops printing — not just jobs, the physical object.",
+        ),
+        list(true, ["Lead: pressroom on final night", "Turn: what digital-only actually cost the paper's reach", "Kicker: foreman's line about the readout"]),
+      ],
+    },
+  });
+
+  const dueNow = new Date(Date.now() - 60 * 60 * 1000);
+  await db.spacedRepetitionCard.createMany({
+    data: [
+      {
+        userId: DEMO_USER_ID,
+        discipline: "writing",
+        sourcePageId: draftPage.id,
+        front: "What's the note-to-self on this draft's opening?",
+        back: "Open on the sound/sensory detail, not the bare fact — let the reader feel it before naming what it means.",
+        dueAt: dueNow,
+      },
+      {
+        userId: DEMO_USER_ID,
+        discipline: "writing",
+        sourcePageId: interviewPage.id,
+        front: "How many of the 14-person crew were kept on after the closure?",
+        back: "6, moved to digital prepress.",
+        dueAt: dueNow,
+      },
+    ],
+  });
+
+  const inDays = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  await db.task.createMany({
+    data: [
+      { userId: DEMO_USER_ID, discipline: "writing", title: "Follow up with Alvarez for final page count", status: "todo", dueAt: inDays(2) },
+      { userId: DEMO_USER_ID, discipline: "writing", title: "Fact-check crew headcount with HR contact", status: "in_progress", dueAt: inDays(4) },
+      { userId: DEMO_USER_ID, discipline: "writing", title: "Send pitch to regional desk", status: "backlog", dueAt: inDays(7) },
+      { userId: DEMO_USER_ID, discipline: "writing", title: "Transcribe Alvarez interview", status: "done", dueAt: inDays(-5) },
+    ],
+  });
+
+  console.log(`Seeded demo Writing binder ${binder.id} for user ${DEMO_USER_ID}`);
+}
+
+async function seedEngineering() {
+  const existing = await db.binder.findFirst({
+    where: { userId: DEMO_USER_ID, discipline: "engineering" },
+  });
+  if (existing) {
+    console.log("Demo Engineering binder already exists, skipping seed.");
+    return;
+  }
+
+  const binder = await db.binder.create({
+    data: { userId: DEMO_USER_ID, discipline: "engineering", title: "Structural Analysis I" },
+  });
+
+  const statics = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Statics", color: "#2b6cb0", order: 0 },
+  });
+  const materials = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Materials", color: "#4d5a70", order: 1 },
+  });
+  const codes = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Standards & Codes", color: "#14335e", order: 2 },
+  });
+
+  const equilibriumPage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: statics.id,
+      title: "Beam Equilibrium",
+      order: 0,
+      masteryLevel: "learning",
+      reviewed: true,
+      content: [
+        heading(1, "Static equilibrium of a simply supported beam"),
+        paragraph("For a rigid body at rest, the sum of forces and the sum of moments about any point must each equal zero."),
+        list(false, ["ΣFx = 0", "ΣFy = 0", "ΣM = 0 (about any chosen point)"]),
+        paragraph("For a simply supported beam with a point load, reactions are found by taking moments about one support to eliminate its reaction term first."),
+      ],
+    },
+  });
+
+  const stressStrainPage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: materials.id,
+      title: "Stress–Strain Behavior",
+      order: 1,
+      masteryLevel: "unfamiliar",
+      reviewed: false,
+      content: [
+        heading(1, "Stress–strain curve — key points"),
+        list(false, [
+          "Elastic region: stress ∝ strain, slope = Young's modulus (E)",
+          "Yield point: onset of permanent (plastic) deformation",
+          "Ultimate tensile strength: maximum stress the material sustains",
+          "Fracture point: where the material breaks",
+        ]),
+        paragraph("Working (allowable) stress is kept well below yield, using a safety factor set by the applicable code — not by engineering judgment alone."),
+      ],
+    },
+  });
+
+  await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: codes.id,
+      title: "Load Combinations (ASCE 7 reference)",
+      order: 2,
+      masteryLevel: "familiar",
+      reviewed: true,
+      content: [
+        heading(1, "LRFD basic load combinations"),
+        list(true, [
+          "1.4D",
+          "1.2D + 1.6L + 0.5(Lr or S or R)",
+          "1.2D + 1.6(Lr or S or R) + (L or 0.5W)",
+          "1.2D + 1.0W + L + 0.5(Lr or S or R)",
+        ]),
+        paragraph("D = dead load, L = live load, Lr = roof live load, S = snow, R = rain, W = wind — use the governing (largest) combination for design."),
+      ],
+    },
+  });
+
+  const dueNow = new Date(Date.now() - 60 * 60 * 1000);
+  await db.spacedRepetitionCard.createMany({
+    data: [
+      {
+        userId: DEMO_USER_ID,
+        discipline: "engineering",
+        sourcePageId: equilibriumPage.id,
+        front: "The three equilibrium equations for a rigid body in 2D?",
+        back: "ΣFx = 0, ΣFy = 0, ΣM = 0 (about any point).",
+        dueAt: dueNow,
+      },
+      {
+        userId: DEMO_USER_ID,
+        discipline: "engineering",
+        sourcePageId: stressStrainPage.id,
+        front: "What does the slope of the elastic region of a stress-strain curve represent?",
+        back: "Young's modulus (E) — the material's stiffness.",
+        dueAt: dueNow,
+      },
+    ],
+  });
+
+  const inDays = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  await db.task.createMany({
+    data: [
+      { userId: DEMO_USER_ID, discipline: "engineering", title: "Problem set 4 — beam reactions", status: "todo", dueAt: inDays(3) },
+      { userId: DEMO_USER_ID, discipline: "engineering", title: "Lab report — tensile test data", status: "in_progress", dueAt: inDays(1) },
+      { userId: DEMO_USER_ID, discipline: "engineering", title: "Read ASCE 7 chapter 2", status: "backlog", dueAt: null },
+      { userId: DEMO_USER_ID, discipline: "engineering", title: "Statics quiz review", status: "done", dueAt: inDays(-4) },
+    ],
+  });
+
+  console.log(`Seeded demo Engineering binder ${binder.id} for user ${DEMO_USER_ID}`);
+}
+
+async function seedArts() {
+  const existing = await db.binder.findFirst({ where: { userId: DEMO_USER_ID, discipline: "arts" } });
+  if (existing) {
+    console.log("Demo Arts binder already exists, skipping seed.");
+    return;
+  }
+
+  const binder = await db.binder.create({
+    data: { userId: DEMO_USER_ID, discipline: "arts", title: "Studio Practice — Senior Year" },
+  });
+
+  const sketchbook = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Sketchbook", color: "#c1432c", order: 0 },
+  });
+  const critique = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Critique Notes", color: "#1a1a1a", order: 1 },
+  });
+  const statement = await db.tabDivider.create({
+    data: { binderId: binder.id, label: "Artist Statement", color: "#5c5c5c", order: 2 },
+  });
+
+  const sketchPage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: sketchbook.id,
+      title: "Thumbnails — series 3",
+      order: 0,
+      masteryLevel: "learning",
+      reviewed: false,
+      content: [
+        heading(1, "Series 3 — thumbnails"),
+        paragraph("Working smaller and faster this round — six thumbnails before committing to a composition, instead of one."),
+        list(false, [
+          "Thumb 4 has the strongest negative space — worth developing",
+          "Recurring motif: the doorway as frame-within-frame",
+        ]),
+      ],
+    },
+  });
+
+  const critiquePage = await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: critique.id,
+      title: "Group Critique — Week 6",
+      order: 1,
+      masteryLevel: "familiar",
+      reviewed: true,
+      content: [
+        heading(1, "Critique notes — Week 6"),
+        list(false, [
+          "Consensus: the palette reads as too uniform across the series — needs one outlier piece",
+          "J. Kwan: the doorway motif is legible without being repetitive, keep it",
+          "Prof: push the scale on at least one piece before the review",
+        ]),
+      ],
+    },
+  });
+
+  await db.page.create({
+    data: {
+      binderId: binder.id,
+      tabDividerId: statement.id,
+      title: "Artist Statement — draft",
+      order: 2,
+      masteryLevel: "unfamiliar",
+      reviewed: false,
+      content: [
+        heading(1, "Artist statement (draft)"),
+        paragraph(
+          "This series treats the doorway not as a threshold but as a held moment — neither inside nor outside, the space where a decision hasn't been made yet.",
+        ),
+        paragraph("Needs: cut the second paragraph, it explains too much. Statement should raise the question the work asks, not answer it."),
+      ],
+    },
+  });
+
+  const dueNow = new Date(Date.now() - 60 * 60 * 1000);
+  await db.spacedRepetitionCard.createMany({
+    data: [
+      {
+        userId: DEMO_USER_ID,
+        discipline: "arts",
+        sourcePageId: sketchPage.id,
+        front: "What's the recurring motif across series 3?",
+        back: "The doorway, used as a frame-within-frame.",
+        dueAt: dueNow,
+      },
+      {
+        userId: DEMO_USER_ID,
+        discipline: "arts",
+        sourcePageId: critiquePage.id,
+        front: "What was the group's main critique of the palette?",
+        back: "Too uniform across the series — needs one outlier piece.",
+        dueAt: dueNow,
+      },
+    ],
+  });
+
+  const inDays = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  await db.task.createMany({
+    data: [
+      { userId: DEMO_USER_ID, discipline: "arts", title: "Develop thumb 4 into full composition", status: "todo", dueAt: inDays(3) },
+      { userId: DEMO_USER_ID, discipline: "arts", title: "Rework artist statement — cut paragraph 2", status: "in_progress", dueAt: inDays(2) },
+      { userId: DEMO_USER_ID, discipline: "arts", title: "Photograph work for portfolio site", status: "backlog", dueAt: null },
+      { userId: DEMO_USER_ID, discipline: "arts", title: "Order canvas for large-scale piece", status: "done", dueAt: inDays(-2) },
+    ],
+  });
+
+  console.log(`Seeded demo Arts binder ${binder.id} for user ${DEMO_USER_ID}`);
+}
+
 async function main() {
   await db.user.upsert({
     where: { id: DEMO_USER_ID },
@@ -363,6 +708,9 @@ async function main() {
 
   await seedMedicine();
   await seedSoftware();
+  await seedWriting();
+  await seedEngineering();
+  await seedArts();
 }
 
 main()
