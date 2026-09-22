@@ -104,6 +104,36 @@ export async function binderRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  const ReorderPagesBody = z.object({ pageIds: z.array(z.string().uuid()).min(1) });
+
+  // TOC is "user-reorderable" per the brief. The client always sends the
+  // binder's FULL page-id list in the new desired order (concatenated across
+  // tabs) rather than one tab's subset — order is a single flat field spanning
+  // the whole binder, so reassigning only a subset risks leaving stale gaps
+  // relative to pages the client didn't include. Simplest correct rule:
+  // reassigning order = array index requires the full set, every time.
+  app.patch("/binders/:id/pages/reorder", async (req, reply) => {
+    const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send(params.error.flatten());
+    const body = ReorderPagesBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send(body.error.flatten());
+
+    const binderPages = await db.page.findMany({ where: { binderId: params.data.id }, select: { id: true } });
+    const binderPageIds = new Set(binderPages.map((p) => p.id));
+    const sentIds = new Set(body.data.pageIds);
+    const sameSet =
+      binderPageIds.size === sentIds.size && [...binderPageIds].every((id) => sentIds.has(id));
+    if (!sameSet) {
+      return reply.code(400).send({ error: "pageIds must be exactly this binder's full page set" });
+    }
+
+    await db.$transaction(
+      body.data.pageIds.map((id, index) => db.page.update({ where: { id }, data: { order: index } })),
+    );
+
+    return { ok: true };
+  });
+
   const UpdateContentBody = z.object({ content: z.array(BlockSchema) });
 
   // A revision snapshot of the PRE-edit content is taken before every save —

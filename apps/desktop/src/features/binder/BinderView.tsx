@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { DndContext, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
-import { useAddAnnotation, useBinder, useCreatePage, useUpdatePage, useUpdatePageContent } from "./api";
+import {
+  useAddAnnotation,
+  useBinder,
+  useCreatePage,
+  useReorderPages,
+  useUpdatePage,
+  useUpdatePageContent,
+} from "./api";
 import { useDueCards } from "../review/api";
 import { useCitations } from "../citations/api";
 import { PageTurn } from "./PageTurn";
@@ -27,6 +37,7 @@ export function BinderView({
   const updatePage = useUpdatePage(binderId);
   const addAnnotation = useAddAnnotation(binderId);
   const createPage = useCreatePage(binderId);
+  const reorderPages = useReorderPages(binderId);
   const updateContent = useUpdatePageContent(binderId);
   const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
   const { data: citations } = useCitations(DEMO_USER_ID, discipline);
@@ -56,6 +67,7 @@ export function BinderView({
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Opening binder…</div>;
   }
 
+  const tabDividers = binder.tabDividers;
   const current = items[index] ?? { type: "toc" };
   const currentPage = current.type === "page" ? pages.find((p) => p.id === current.pageId) : undefined;
 
@@ -73,6 +85,20 @@ export function BinderView({
   function goToTab(tabId: string) {
     const firstPage = pages.find((p) => p.tabDividerId === tabId);
     if (firstPage) goToPageId(firstPage.id);
+  }
+
+  // A within-tab reorder only decides that tab's own relative sequence — every
+  // other tab's pages keep their existing relative order, concatenated
+  // chapter-by-chapter (matches how a bound notebook actually flows, and is
+  // what PageTurn prev/next and the thumbnail strip walk through).
+  function handleTabReorder(tabId: string, newTabPageIds: string[]) {
+    const fullOrder: string[] = [];
+    for (const tab of tabDividers) {
+      if (tab.id === tabId) fullOrder.push(...newTabPageIds);
+      else fullOrder.push(...pages.filter((p) => p.tabDividerId === tab.id).map((p) => p.id));
+    }
+    fullOrder.push(...pages.filter((p) => p.tabDividerId === null).map((p) => p.id));
+    reorderPages.mutate(fullOrder);
   }
 
   const pageKey = current.type === "toc" ? "toc" : current.pageId;
@@ -130,6 +156,7 @@ export function BinderView({
               tabDividers={binder.tabDividers}
               onSelect={goToPageId}
               onAddPage={(tabDividerId, title) => createPage.mutate({ tabDividerId, title })}
+              onReorder={handleTabReorder}
             />
           ) : currentPage ? (
             <div className="relative flex h-full flex-col gap-6">
@@ -221,16 +248,99 @@ function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
   );
 }
 
+function SortableTocEntry({
+  page,
+  onSelect,
+}: {
+  page: { id: string; title: string };
+  onSelect: (pageId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: page.id,
+  });
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      className="flex items-center gap-2"
+    >
+      <span
+        {...attributes}
+        {...listeners}
+        aria-label="Drag to reorder"
+        className="cursor-grab select-none px-1 py-2 text-[var(--color-text-muted)] active:cursor-grabbing"
+      >
+        ⠿
+      </span>
+      <button
+        type="button"
+        onClick={() => onSelect(page.id)}
+        className="w-full py-2 text-left hover:text-[var(--color-accent)]"
+      >
+        {page.title}
+      </button>
+    </li>
+  );
+}
+
+function TocTabSection({
+  tab,
+  tabPages,
+  onSelect,
+  onReorder,
+}: {
+  tab: { id: string; label: string; color: string };
+  tabPages: { id: string; title: string; tabDividerId: string | null }[];
+  onSelect: (pageId: string) => void;
+  onReorder: (tabId: string, newTabPageIds: string[]) => void;
+}) {
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = tabPages.map((p) => p.id);
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from === -1 || to === -1) return;
+    const reordered = [...ids];
+    reordered.splice(from, 1);
+    reordered.splice(to, 0, String(active.id));
+    onReorder(tab.id, reordered);
+  }
+
+  return (
+    <div className="flex flex-col">
+      <p className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
+        <span className="h-2 w-2 rounded-full" style={{ background: tab.color }} />
+        {tab.label}
+      </p>
+      {tabPages.length > 0 && (
+        <DndContext onDragEnd={handleDragEnd}>
+          <SortableContext items={tabPages.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+            <ul className="flex flex-col divide-y divide-[var(--color-border)]">
+              {tabPages.map((page) => (
+                <SortableTocEntry key={page.id} page={page} onSelect={onSelect} />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      )}
+    </div>
+  );
+}
+
 function TableOfContents({
   pages,
   tabDividers,
   onSelect,
   onAddPage,
+  onReorder,
 }: {
   pages: { id: string; title: string; tabDividerId: string | null }[];
   tabDividers: { id: string; label: string; color: string }[];
   onSelect: (pageId: string) => void;
   onAddPage: (tabDividerId: string, title: string) => void;
+  onReorder: (tabId: string, newTabPageIds: string[]) => void;
 }) {
   return (
     <div>
@@ -242,25 +352,7 @@ function TableOfContents({
           const tabPages = pages.filter((p) => p.tabDividerId === tab.id);
           return (
             <div key={tab.id} className="flex flex-col">
-              <p className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
-                <span className="h-2 w-2 rounded-full" style={{ background: tab.color }} />
-                {tab.label}
-              </p>
-              {tabPages.length > 0 && (
-                <ul className="flex flex-col divide-y divide-[var(--color-border)]">
-                  {tabPages.map((page) => (
-                    <li key={page.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelect(page.id)}
-                        className="w-full py-2 text-left hover:text-[var(--color-accent)]"
-                      >
-                        {page.title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <TocTabSection tab={tab} tabPages={tabPages} onSelect={onSelect} onReorder={onReorder} />
               <AddPageInline onAdd={(title) => onAddPage(tab.id, title)} />
             </div>
           );

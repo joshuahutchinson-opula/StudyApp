@@ -46,6 +46,16 @@ export function useCreatePage(binderId: string) {
   });
 }
 
+export function useReorderPages(binderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pageIds: string[]) => api.patch(`/binders/${binderId}/pages/reorder`, { pageIds }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["binder", binderId] });
+    },
+  });
+}
+
 export function useUpdatePageContent(binderId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
