@@ -15,14 +15,16 @@ export interface GraphEdgeDto {
   id: string;
   source: string;
   target: string;
-  kind: "references";
+  kind: "references" | "manual";
 }
 
-// Derived on read from existing tables rather than a separately-synced graph
-// table — simpler, and can't drift out of sync with the binder/planner data
-// it's a view over. The GraphNode/GraphEdge models in the schema are for a
-// future pass where AI-suggested or manually-drawn links need to persist
-// independently of any single source entity.
+// Nodes are derived on read from existing tables rather than a separately-
+// synced table — simpler, and can't drift out of sync with the binder/
+// planner data they're a view over. Edges are a mix: "references" edges are
+// also derived (e.g. a flashcard's sourcePageId); "manual" edges are the one
+// thing that genuinely needs to persist independently, since a user drawing
+// a link between two notes isn't derivable from anything else — see the
+// GraphEdge model.
 export async function graphRoutes(app: FastifyInstance) {
   app.get("/graph", async (req, reply) => {
     const query = z
@@ -82,6 +84,45 @@ export async function graphRoutes(app: FastifyInstance) {
       });
     }
 
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    const manualEdges = await db.graphEdge.findMany({ where: { userId, discipline } });
+    for (const edge of manualEdges) {
+      // Drop silently rather than error — content on either end may have
+      // been deleted since the link was drawn, and a stale link shouldn't
+      // break the whole graph view.
+      if (!nodeIds.has(edge.sourceRef) || !nodeIds.has(edge.targetRef)) continue;
+      edges.push({ id: edge.id, source: edge.sourceRef, target: edge.targetRef, kind: "manual" });
+    }
+
     return { nodes, edges };
+  });
+
+  const CreateEdgeBody = z.object({
+    userId: z.string().uuid(),
+    discipline: DisciplineSchema,
+    sourceRef: z.string().min(1),
+    targetRef: z.string().min(1),
+  });
+
+  app.post("/graph/edges", async (req, reply) => {
+    const body = CreateEdgeBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send(body.error.flatten());
+
+    return db.graphEdge.create({
+      data: {
+        userId: body.data.userId,
+        discipline: body.data.discipline,
+        sourceRef: body.data.sourceRef,
+        targetRef: body.data.targetRef,
+        kind: "manual",
+      },
+    });
+  });
+
+  app.delete("/graph/edges/:id", async (req, reply) => {
+    const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send(params.error.flatten());
+    await db.graphEdge.delete({ where: { id: params.data.id } });
+    return { ok: true };
   });
 }

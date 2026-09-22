@@ -68,6 +68,9 @@ importers:
       cytoscape:
         specifier: ^3.30.4
         version: 3.34.3
+      cytoscape-edgehandles:
+        specifier: ^4.0.1
+        version: 4.0.1(cytoscape@3.34.3)
       mathjs:
         specifier: ^13.2.0
         version: 13.2.3
@@ -90,6 +93,9 @@ importers:
       '@tauri-apps/cli':
         specifier: ^2.1.0
         version: 2.11.5
+      '@types/cytoscape-edgehandles':
+        specifier: ^4.0.5
+        version: 4.0.5
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.6
@@ -765,6 +771,9 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
+  '@types/cytoscape-edgehandles@4.0.5':
+    resolution: {integrity: sha512-CHgYD/NV90bx+0/w0QjLsi9JYYSh9RlvoklEe2T/5/+zXv1rsXbvQMM4PX5AxqZ9FatQOa/h3zSnAquPfLAuyg==}
+
   '@types/node@22.20.4':
     resolution: {integrity: sha512-zJRE40jpHtKqE/C4fgHrAKQLJuSpzEnP9ff9Y7YtoR3Wd2pwqzlekDeEuUQXjRd+QCYnVnNwuJYmhdk9XV8gvA==}
 
@@ -825,6 +834,11 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  cytoscape-edgehandles@4.0.1:
+    resolution: {integrity: sha512-uSYshkqRZ4luCxK295bEVTg46q4ZW+fwJhcIzMrtfNR7zeAnJ38Z48kUGeu5ibtXkgLbcZAg0YE4ED2dRuaePg==}
+    peerDependencies:
+      cytoscape: ^3.2.0
 
   cytoscape@3.34.3:
     resolution: {integrity: sha512-yfYGhRcGAntq6YBD583j4n0Eg3jIxvWmZtz/5uz9UYkeIStSlMxuUja+ec5j3iBD8nv1rwaOAYMW09tBdkSeaQ==}
@@ -1077,6 +1091,12 @@ packages:
   lightningcss@1.33.0:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
+
+  lodash.memoize@4.1.2:
+    resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
+
+  lodash.throttle@4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -1766,6 +1786,10 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.11.5
       '@tauri-apps/cli-win32-x64-msvc': 2.11.5
 
+  '@types/cytoscape-edgehandles@4.0.5':
+    dependencies:
+      cytoscape: 3.34.3
+
   '@types/node@22.20.4':
     dependencies:
       undici-types: 6.21.0
@@ -1812,6 +1836,12 @@ snapshots:
   cookie@1.1.1: {}
 
   csstype@3.2.3: {}
+
+  cytoscape-edgehandles@4.0.1(cytoscape@3.34.3):
+    dependencies:
+      cytoscape: 3.34.3
+      lodash.memoize: 4.1.2
+      lodash.throttle: 4.1.1
 
   cytoscape@3.34.3: {}
 
@@ -2043,6 +2073,10 @@ snapshots:
       lightningcss-linux-x64-musl: 1.33.0
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
+
+  lodash.memoize@4.1.2: {}
+
+  lodash.throttle@4.1.1: {}
 
   magic-string@0.30.21:
     dependencies:

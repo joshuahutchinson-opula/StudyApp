@@ -20,6 +20,7 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "cytoscape": "^3.30.4",
+    "cytoscape-edgehandles": "^4.0.1",
     "mathjs": "^13.2.0",
     "motion": "^11.11.9",
     "react": "^19.2.8",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
     "@tauri-apps/cli": "^2.1.0",
+    "@types/cytoscape-edgehandles": "^4.0.5",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",

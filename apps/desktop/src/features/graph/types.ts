@@ -10,7 +10,7 @@ export interface GraphEdgeDto {
   id: string;
   source: string;
   target: string;
-  kind: "references";
+  kind: "references" | "manual";
 }
 
 export interface GraphData {

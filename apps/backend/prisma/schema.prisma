@@ -40,18 +40,12 @@ enum StudyMode {
   free
 }
 
-enum GraphNodeKind {
-  note
-  task
-  source
-  flashcard
-}
-
 enum GraphEdgeKind {
   cites
   references
   tags
   ai_suggested
+  manual
 }
 
 enum CitationStyle {
@@ -74,7 +68,6 @@ model User {
   deadlines        Deadline[]
   studySessions    StudySession[]
   cards            SpacedRepetitionCard[]
-  graphNodes       GraphNode[]
   graphEdges       GraphEdge[]
   caseAttempts     CaseAttempt[]
   citations        Citation[]
@@ -228,36 +221,26 @@ model SpacedRepetitionCard {
   @@index([sourcePageId])
 }
 
-// Thin pointer into the graph view; refId points at the underlying spine entity.
-model GraphNode {
-  id     String        @id @default(uuid())
-  userId String
-  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind   GraphNodeKind
-  refId  String
-  label  String
-
-  outgoingEdges GraphEdge[] @relation("SourceNode")
-  incomingEdges GraphEdge[] @relation("TargetNode")
-
-  @@index([userId])
-  @@index([refId])
-}
-
+// Persisted user-drawn (or future AI-suggested) links, layered on top of the
+// derived graph in routes/graph.ts. The original design here was a real
+// GraphNode table with FK-based edges, but the graph view that actually got
+// built derives its nodes on read from existing tables using synthetic
+// string refs ("page:<uuid>", "card:<uuid>", "task:<uuid>") rather than
+// persisting a parallel node table that could drift out of sync — so this
+// stores refs directly instead of foreign keys to a GraphNode that doesn't
+// otherwise exist. GraphNode itself was unused (zero rows, zero references)
+// and is removed rather than kept as dead weight.
 model GraphEdge {
-  id           String        @id @default(uuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceNodeId String
-  sourceNode   GraphNode     @relation("SourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
-  targetNodeId String
-  targetNode   GraphNode     @relation("TargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
-  kind         GraphEdgeKind
-  createdAt    DateTime      @default(now())
+  id         String        @id @default(uuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discipline Discipline
+  sourceRef  String
+  targetRef  String
+  kind       GraphEdgeKind @default(manual)
+  createdAt  DateTime      @default(now())
 
-  @@index([userId])
-  @@index([sourceNodeId])
-  @@index([targetNodeId])
+  @@index([userId, discipline])
 }
 
 model Citation {

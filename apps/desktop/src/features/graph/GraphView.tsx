@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import cytoscape, { type Core, type NodeSingular } from "cytoscape";
+import edgehandles, { type EdgeHandlesInstance } from "cytoscape-edgehandles";
 import type { Discipline } from "@the-desk/shared";
-import { useGraph } from "./api";
+import { useCreateGraphEdge, useGraph } from "./api";
 import type { GraphNodeDto } from "./types";
+
+cytoscape.use(edgehandles);
 
 const KIND_SHAPE: Record<GraphNodeDto["kind"], string> = {
   note: "ellipse",
@@ -32,11 +35,14 @@ export function GraphView({
   onOpenNote: (pageId: string) => void;
 }) {
   const { data, isLoading } = useGraph(userId, discipline);
+  const createEdge = useCreateGraphEdge(userId, discipline);
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
+  const ehRef = useRef<EdgeHandlesInstance | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number; label: string; kind: string } | null>(
     null,
   );
+  const [linkMode, setLinkMode] = useState(false);
 
   useEffect(() => {
     if (!data || !containerRef.current) return;
@@ -66,7 +72,7 @@ export function GraphView({
           parent: `cluster:${n.cluster}`,
         },
       })),
-      ...data.edges.map((e) => ({ data: { id: e.id, source: e.source, target: e.target } })),
+      ...data.edges.map((e) => ({ data: { id: e.id, source: e.source, target: e.target, kind: e.kind } })),
     ];
 
     const cy = cytoscape({
@@ -118,6 +124,16 @@ export function GraphView({
             "target-arrow-shape": "none",
           },
         },
+        {
+          // User-drawn links are visually distinct (dashed, accent-colored)
+          // from derived edges like a flashcard's link to its source page.
+          selector: "edge[kind='manual']",
+          style: {
+            "line-color": themeColor("--color-accent", "#3f3f46"),
+            "line-style": "dashed",
+            width: 1.5,
+          },
+        },
       ],
       layout: {
         name: "cose",
@@ -136,6 +152,20 @@ export function GraphView({
 
     cyRef.current = cy;
     cy.fit(undefined, 60);
+
+    const eh = cy.edgehandles({
+      canConnect: (source, target) =>
+        !source.same(target) && source.data("kind") && target.data("kind"),
+      edgeParams: () => ({ data: { kind: "manual" } }),
+      snap: true,
+    });
+    eh.disableDrawMode(); // off until the student turns on Link mode
+    ehRef.current = eh;
+
+    cy.on("ehcomplete", (_evt, sourceNode: NodeSingular, targetNode: NodeSingular, addedEdge) => {
+      addedEdge.remove(); // the real edge comes back through the query refetch below
+      createEdge.mutate({ sourceRef: sourceNode.id(), targetRef: targetNode.id() });
+    });
 
     // Dev-only: lets e2e checks click a node's real rendered position without
     // guessing coordinates from a force layout that isn't seeded/deterministic.
@@ -167,10 +197,21 @@ export function GraphView({
     cy.on("mouseout", "node[kind]", () => setHover(null));
 
     return () => {
+      eh.destroy();
       cy.destroy();
       cyRef.current = null;
+      ehRef.current = null;
     };
-  }, [data, onOpenNote]);
+  }, [data, onOpenNote, createEdge]);
+
+  // A separate effect (rather than folding linkMode into the deps above) so
+  // toggling Link mode doesn't tear down and rebuild the whole cytoscape
+  // instance — it just flips edgehandles' draw mode on the existing one.
+  useEffect(() => {
+    if (!ehRef.current) return;
+    if (linkMode) ehRef.current.enableDrawMode();
+    else ehRef.current.disableDrawMode();
+  }, [linkMode, data]);
 
   if (isLoading || !data) {
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading graph…</div>;
@@ -186,6 +227,20 @@ export function GraphView({
 
   return (
     <div className="relative h-[calc(100vh-49px)]">
+      <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setLinkMode((v) => !v)}
+          className="rounded-full px-3 py-1.5 text-xs"
+          style={{
+            background: linkMode ? "var(--color-accent)" : "var(--color-surface)",
+            color: linkMode ? "#fff" : "var(--color-text-muted)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          {linkMode ? "Link mode: drag between nodes to connect" : "Link mode"}
+        </button>
+      </div>
       <div ref={containerRef} className="h-full w-full" />
       {hover && (
         <div
