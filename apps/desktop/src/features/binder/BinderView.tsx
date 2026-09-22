@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "motion/react";
 import type { Discipline } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { useSpring } from "../../hooks/useSpring";
 import {
   useAddAnnotation,
@@ -69,7 +70,11 @@ export function BinderView({
   }, [initialPageId, items.length]);
 
   if (isLoading || !binder) {
-    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Opening binder…</div>;
+    return (
+      <div className="p-[var(--space-7)]">
+        <SystemMessage msgKey="loadingBinder" />
+      </div>
+    );
   }
 
   const tabDividers = binder.tabDividers;

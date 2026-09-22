@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
+import { ExamModeIndicator } from "./components/ExamModeIndicator";
 import { SpringButton } from "./components/SpringButton";
 import { useSpring } from "./hooks/useSpring";
 import { useDisciplineStore } from "./store/useDisciplineStore";
@@ -163,13 +164,16 @@ function Desk({
             )}
           </motion.button>
         ))}
-        <SpringButton
-          type="button"
-          onClick={onLogOut}
-          className="ml-auto text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        >
-          Log out
-        </SpringButton>
+        <div className="ml-auto flex items-center gap-[var(--space-3)]">
+          <ExamModeIndicator userId={userId} />
+          <SpringButton
+            type="button"
+            onClick={onLogOut}
+            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            Log out
+          </SpringButton>
+        </div>
       </div>
 
       <div className="flex-1">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { useBinder } from "../binder/api";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { useSpring } from "../../hooks/useSpring";
 import { useAddComment, useCreateThread, useCritiqueThreads, useResolveThread } from "./api";
 import type { CritiqueThread } from "./types";
@@ -135,7 +136,11 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
   const activeThread = threads?.find((t) => t.id === activeThreadId);
 
   if (isLoading || !binder) {
-    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading…</div>;
+    return (
+      <div className="p-[var(--space-7)]">
+        <SystemMessage msgKey="loading" />
+      </div>
+    );
   }
 
   if (!selected) {

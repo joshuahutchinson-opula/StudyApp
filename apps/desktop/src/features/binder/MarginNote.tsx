@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { MarginAnnotation } from "@the-desk/shared";
+import { generateStudyPrompt, type MarginAnnotation } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
+import { useDisciplineStore } from "../../store/useDisciplineStore";
 
 export function MarginNote({
   annotations,
@@ -11,17 +12,32 @@ export function MarginNote({
 }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const discipline = useDisciplineStore((s) => s.activeDiscipline) ?? "medicine";
 
   return (
     <div className="flex flex-col gap-[var(--space-1)] pt-[var(--space-1)]">
       {annotations.map((a) => (
-        <p
-          key={a.id}
-          className="rounded-[var(--radius-sm)] px-[var(--space-2)] py-[var(--space-1)] text-xs leading-snug"
-          style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
-        >
-          {a.body}
-        </p>
+        <div key={a.id} className="flex flex-col gap-[var(--space-1)]">
+          <p
+            className="rounded-[var(--radius-sm)] px-[var(--space-2)] py-[var(--space-1)] text-xs leading-snug"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+          >
+            {a.body}
+          </p>
+          {/* The co-annotator: a second, clearly-labeled voice beside your own
+              note — a built-in study prompt, not AI (none is wired up yet) and
+              not another person. Deterministic per note, so it doesn't shuffle
+              on every render. */}
+          <div
+            className="ml-[var(--space-2)] rounded-[var(--radius-sm)] px-[var(--space-2)] py-[var(--space-1)] text-xs leading-snug"
+            style={{ borderLeft: "2px solid var(--color-accent)", color: "var(--color-text-muted)" }}
+          >
+            <span className="uppercase tracking-wide" style={{ fontSize: "9px", opacity: 0.7 }}>
+              Study prompt
+            </span>
+            <p>{generateStudyPrompt(discipline, a.body)}</p>
+          </div>
+        </div>
       ))}
 
       {adding ? (

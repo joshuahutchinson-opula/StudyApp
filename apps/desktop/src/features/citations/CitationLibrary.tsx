@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DISCIPLINE_DEFAULT_CITATION_STYLE, type Discipline } from "@the-desk/shared";
+import { DISCIPLINE_DEFAULT_CITATION_STYLE, MICROCOPY, type Discipline } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
 import { useCitations, useCreateCitation, type NewCitationInput } from "./api";
 
@@ -112,6 +112,7 @@ export function CitationLibrary({ userId, discipline }: { userId: string; discip
   const { data: citations, isLoading } = useCitations(userId, discipline);
   const createCitation = useCreateCitation(userId, discipline);
   const style = DISCIPLINE_DEFAULT_CITATION_STYLE[discipline];
+  const copy = MICROCOPY[discipline];
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-[var(--space-5)] px-[var(--space-4)] py-[var(--space-5)]">
@@ -125,7 +126,7 @@ export function CitationLibrary({ userId, discipline }: { userId: string; discip
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--color-text-muted)]">Loading…</p>
+        <p className="text-sm text-[var(--color-text-muted)]">{copy.loadingCitations}</p>
       ) : (
         <ul className="flex flex-col gap-[var(--space-3)]">
           {citations?.map((c) => (
@@ -137,7 +138,7 @@ export function CitationLibrary({ userId, discipline }: { userId: string; discip
             </li>
           ))}
           {citations?.length === 0 && (
-            <p className="text-sm text-[var(--color-text-muted)]">No citations yet.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{copy.emptyCitations}</p>
           )}
         </ul>
       )}

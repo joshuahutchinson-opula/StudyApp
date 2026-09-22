@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useBinder } from "../binder/api";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { usePageRevisions, useRestoreRevision } from "./api";
 import type { Block } from "@the-desk/shared";
 
@@ -87,7 +88,11 @@ export function ManuscriptTimeline({ binderId }: { binderId: string }) {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
 
   if (isLoading || !binder) {
-    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading…</div>;
+    return (
+      <div className="p-[var(--space-7)]">
+        <SystemMessage msgKey="loading" />
+      </div>
+    );
   }
 
   const pages = [...binder.pages].sort((a, b) => a.order - b.order);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Discipline } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { useSearch } from "./api";
 import type { SearchResult } from "./types";
 
@@ -47,7 +48,7 @@ export function SearchView({
       </p>
 
       <div className="mt-[var(--space-5)] flex flex-col gap-[var(--space-2)]">
-        {isFetching && <p className="text-sm text-[var(--color-text-muted)]">Searching…</p>}
+        {isFetching && <SystemMessage msgKey="searching" />}
         {!isFetching && debounced && results?.length === 0 && (
           <p className="text-sm text-[var(--color-text-muted)]">No matches for "{debounced}".</p>
         )}

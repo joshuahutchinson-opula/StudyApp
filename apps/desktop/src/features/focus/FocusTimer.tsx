@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { SpringButton } from "../../components/SpringButton";
+import { useMicrocopy } from "../../hooks/useMicrocopy";
 import { useSpring } from "../../hooks/useSpring";
 import { useEndSession, useStartSession, useStudySummary, type StudyMode } from "./api";
 
@@ -24,6 +25,7 @@ function formatTime(totalSeconds: number) {
 
 export function FocusTimer({ userId }: { userId: string }) {
   const spring = useSpring();
+  const sessionReadyCopy = useMicrocopy("sessionReady");
   const [mode, setMode] = useState<StudyMode>("pomodoro");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -77,7 +79,7 @@ export function FocusTimer({ userId }: { userId: string }) {
       <div>
         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Focus</p>
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
-          {justCompleted ? "Session complete" : running ? MODE_LABEL[mode] : "Ready when you are"}
+          {justCompleted ? "Session complete" : running ? MODE_LABEL[mode] : sessionReadyCopy}
         </h1>
       </div>
 

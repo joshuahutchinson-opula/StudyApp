@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import type { Discipline } from "@the-desk/shared";
+import { MICROCOPY, type Discipline } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
 import { useSpring } from "../../hooks/useSpring";
 import { useDueCards, useReviewCard } from "./api";
@@ -25,6 +25,7 @@ export function ReviewSession({
   const { data: dueCards, isLoading } = useDueCards(userId, discipline);
   const reviewCard = useReviewCard(userId, discipline);
   const spring = useSpring();
+  const copy = MICROCOPY[discipline];
 
   const [revealed, setRevealed] = useState(false);
   // Cards graded this session are hidden locally rather than re-snapshotted
@@ -32,7 +33,7 @@ export function ReviewSession({
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
 
   if (isLoading) {
-    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading review queue…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">{copy.loadingReview}</div>;
   }
 
   const queue = (dueCards ?? []).filter((c) => !reviewedIds.includes(c.id));
@@ -63,12 +64,12 @@ export function ReviewSession({
       {!current ? (
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-7)] text-center">
           <p className="text-xl" style={{ fontFamily: "var(--font-display)" }}>
-            All caught up
+            {copy.allCaughtUp}
           </p>
           <p className="mt-[var(--space-2)] text-sm text-[var(--color-text-muted)]">
             {reviewedIds.length > 0
               ? `Reviewed ${reviewedIds.length} card${reviewedIds.length === 1 ? "" : "s"} this session.`
-              : "No cards are due right now."}
+              : copy.noCardsDue}
           </p>
         </div>
       ) : (

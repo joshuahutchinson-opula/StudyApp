@@ -7,3 +7,5 @@ export * from "./study.js";
 export * from "./graph.js";
 export * from "./citation.js";
 export * from "./demo.js";
+export * from "./microcopy.js";
+export * from "./coAnnotator.js";

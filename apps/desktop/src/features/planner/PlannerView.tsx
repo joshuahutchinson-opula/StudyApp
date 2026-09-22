@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import type { Discipline, Task, TaskStatus } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { useSpring } from "../../hooks/useSpring";
 import { useCreateDeadline, useCreateTask, useDeadlines, useTasks, useUpdateTaskStatus } from "./api";
 import { ListView } from "./ListView";
@@ -274,7 +275,7 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
       </div>
 
       {isLoading || !tasks ? (
-        <div className="text-sm text-[var(--color-text-muted)]">Loading tasks…</div>
+        <SystemMessage msgKey="loadingTasks" />
       ) : view === "list" ? (
         <ListView tasks={tasks} />
       ) : view === "calendar" ? (

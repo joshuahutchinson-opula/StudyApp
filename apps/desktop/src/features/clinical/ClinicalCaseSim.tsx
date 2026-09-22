@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SpringButton } from "../../components/SpringButton";
+import { SystemMessage } from "../../components/SystemMessage";
 import { useSpring } from "../../hooks/useSpring";
 import { useCase, useCases, useSubmitAttempt } from "./api";
 import type { CaseAttemptResult } from "./types";
@@ -142,7 +143,11 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
   const [result, setResult] = useState<CaseAttemptResult | null>(null);
 
   if (casesLoading || caseLoading || !clinicalCase) {
-    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading case…</div>;
+    return (
+      <div className="p-[var(--space-7)]">
+        <SystemMessage msgKey="loadingCase" />
+      </div>
+    );
   }
 
   function toggleTest(test: string) {
