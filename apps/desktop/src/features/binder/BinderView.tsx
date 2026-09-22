@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { DEMO_USER_ID } from "@the-desk/shared";
+import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
 import { useBinder, useUpdatePage } from "./api";
 import { useDueCards } from "../review/api";
 import { PageTurn } from "./PageTurn";
@@ -12,14 +12,16 @@ type DisplayItem = { type: "toc" } | { type: "page"; pageId: string };
 
 export function BinderView({
   binderId,
+  discipline,
   onOpenReview,
 }: {
   binderId: string;
+  discipline: Discipline;
   onOpenReview: () => void;
 }) {
   const { data: binder, isLoading } = useBinder(binderId);
   const updatePage = useUpdatePage(binderId);
-  const { data: dueCards } = useDueCards(DEMO_USER_ID);
+  const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
   const [index, setIndex] = useState(0);
   const [navDirection, setNavDirection] = useState<1 | -1 | 0>(0);
 

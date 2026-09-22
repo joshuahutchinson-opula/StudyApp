@@ -1,21 +1,29 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { DisciplineSchema } from "@the-desk/shared";
 import { db } from "../db.js";
 import { scheduleReview } from "../srs.js";
 
 export async function cardRoutes(app: FastifyInstance) {
   app.get("/cards/due", async (req, reply) => {
-    const query = z.object({ userId: z.string().uuid() }).safeParse(req.query);
+    const query = z
+      .object({ userId: z.string().uuid(), discipline: DisciplineSchema })
+      .safeParse(req.query);
     if (!query.success) return reply.code(400).send(query.error.flatten());
 
     return db.spacedRepetitionCard.findMany({
-      where: { userId: query.data.userId, dueAt: { lte: new Date() } },
+      where: {
+        userId: query.data.userId,
+        discipline: query.data.discipline,
+        dueAt: { lte: new Date() },
+      },
       orderBy: { dueAt: "asc" },
     });
   });
 
   const CreateCardBody = z.object({
     userId: z.string().uuid(),
+    discipline: DisciplineSchema,
     sourcePageId: z.string().uuid().nullable().optional(),
     front: z.string().min(1),
     back: z.string().min(1),
@@ -28,6 +36,7 @@ export async function cardRoutes(app: FastifyInstance) {
     return db.spacedRepetitionCard.create({
       data: {
         userId: body.data.userId,
+        discipline: body.data.discipline,
         sourcePageId: body.data.sourcePageId ?? null,
         front: body.data.front,
         back: body.data.back,

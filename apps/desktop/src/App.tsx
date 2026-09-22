@@ -88,13 +88,15 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
       <div className="flex-1">
         {mode === "planner" && <PlannerView userId={DEMO_USER_ID} discipline={discipline} />}
 
-        {mode === "review" && <ReviewSession userId={DEMO_USER_ID} onExit={() => setMode("binder")} />}
+        {mode === "review" && (
+          <ReviewSession userId={DEMO_USER_ID} discipline={discipline} onExit={() => setMode("binder")} />
+        )}
 
         {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
 
         {mode === "binder" &&
           (binder ? (
-            <BinderView binderId={binder.id} onOpenReview={() => setMode("review")} />
+            <BinderView binderId={binder.id} discipline={discipline} onOpenReview={() => setMode("review")} />
           ) : (
             <div className="mx-auto flex max-w-2xl flex-col justify-center px-6 py-20">
               <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>

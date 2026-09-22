@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import type { Discipline } from "@the-desk/shared";
 import { useDueCards, useReviewCard } from "./api";
 import type { ReviewGrade } from "./types";
 
@@ -10,9 +11,17 @@ const GRADE_BUTTONS: { grade: ReviewGrade; label: string; hint: string; color: s
   { grade: "easy", label: "Easy", hint: "long gap", color: "#22c55e" },
 ];
 
-export function ReviewSession({ userId, onExit }: { userId: string; onExit: () => void }) {
-  const { data: dueCards, isLoading } = useDueCards(userId);
-  const reviewCard = useReviewCard(userId);
+export function ReviewSession({
+  userId,
+  discipline,
+  onExit,
+}: {
+  userId: string;
+  discipline: Discipline;
+  onExit: () => void;
+}) {
+  const { data: dueCards, isLoading } = useDueCards(userId, discipline);
+  const reviewCard = useReviewCard(userId, discipline);
 
   const [revealed, setRevealed] = useState(false);
   // Cards graded this session are hidden locally rather than re-snapshotted

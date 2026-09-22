@@ -28,7 +28,16 @@ export const BlockSchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string().uuid(), kind: z.literal("heading"), level: z.number().int().min(1).max(3), text: z.string() }),
   z.object({ id: z.string().uuid(), kind: z.literal("paragraph"), text: z.string() }),
   z.object({ id: z.string().uuid(), kind: z.literal("list"), ordered: z.boolean(), items: z.array(z.string()) }),
-  z.object({ id: z.string().uuid(), kind: z.literal("code"), language: z.string().optional(), code: z.string() }),
+  // `runnable` powers Software Dev's "concept-to-code" signature feature —
+  // additive to the existing code block, not a new kind, since only the
+  // execution affordance is discipline-specific, not the content shape.
+  z.object({
+    id: z.string().uuid(),
+    kind: z.literal("code"),
+    language: z.string().optional(),
+    code: z.string(),
+    runnable: z.boolean().optional(),
+  }),
   z.object({ id: z.string().uuid(), kind: z.literal("image"), url: z.string(), caption: z.string().optional() }),
   z.object({ id: z.string().uuid(), kind: z.literal("citationRef"), citationId: z.string().uuid() }),
 ]);

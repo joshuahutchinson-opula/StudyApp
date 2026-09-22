@@ -1,4 +1,5 @@
 import type { Block } from "@the-desk/shared";
+import { RunnableCode } from "./RunnableCode";
 
 export function PageContent({ blocks }: { blocks: Block[] }) {
   return (
@@ -50,13 +51,15 @@ export function PageContent({ blocks }: { blocks: Block[] }) {
           }
           case "code":
             return (
-              <pre
-                key={block.id}
-                className="overflow-x-auto rounded-[var(--radius-base)] bg-[var(--color-surface)] p-4 text-sm"
-                style={{ fontFamily: "var(--font-mono)", border: "1px solid var(--color-border)" }}
-              >
-                <code>{block.code}</code>
-              </pre>
+              <div key={block.id}>
+                <pre
+                  className="overflow-x-auto rounded-[var(--radius-base)] bg-[var(--color-surface)] p-4 text-sm"
+                  style={{ fontFamily: "var(--font-mono)", border: "1px solid var(--color-border)" }}
+                >
+                  <code>{block.code}</code>
+                </pre>
+                {block.runnable && <RunnableCode code={block.code} />}
+              </div>
             );
           case "image":
             return (
