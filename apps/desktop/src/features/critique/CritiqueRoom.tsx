@@ -1,0 +1,229 @@
+import { useState } from "react";
+import { useBinder } from "../binder/api";
+import { useAddComment, useCreateThread, useCritiqueThreads, useResolveThread } from "./api";
+import type { CritiqueThread } from "./types";
+
+const AUTHOR = "You";
+
+function ThreadPanel({
+  pageId,
+  thread,
+  onClose,
+}: {
+  pageId: string;
+  thread: CritiqueThread;
+  onClose: () => void;
+}) {
+  const [reply, setReply] = useState("");
+  const addComment = useAddComment(pageId);
+  const resolveThread = useResolveThread(pageId);
+
+  return (
+    <div className="flex w-72 flex-col gap-3 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+          {thread.resolved ? "Resolved" : "Open"}
+        </p>
+        <button type="button" onClick={onClose} className="text-xs text-[var(--color-text-muted)]">
+          Close
+        </button>
+      </div>
+
+      <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+        {thread.comments.map((c) => (
+          <div key={c.id} className="text-sm">
+            <p className="font-medium">{c.authorName}</p>
+            <p className="text-[var(--color-text)]">{c.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!reply.trim()) return;
+          addComment.mutate({ threadId: thread.id, authorName: AUTHOR, body: reply.trim() });
+          setReply("");
+        }}
+        className="flex flex-col gap-2"
+      >
+        <textarea
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          rows={2}
+          placeholder="Reply…"
+          className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+        />
+        <div className="flex justify-between">
+          <button type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
+            Reply
+          </button>
+          <button
+            type="button"
+            onClick={() => resolveThread.mutate({ threadId: thread.id, resolved: !thread.resolved })}
+            className="text-xs text-[var(--color-text-muted)]"
+          >
+            {thread.resolved ? "Reopen" : "Mark resolved"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function NewPinForm({
+  pageId,
+  x,
+  y,
+  onDone,
+}: {
+  pageId: string;
+  x: number;
+  y: number;
+  onDone: () => void;
+}) {
+  const [body, setBody] = useState("");
+  const createThread = useCreateThread(pageId);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!body.trim()) return;
+        createThread.mutate({ x, y, authorName: AUTHOR, body: body.trim() });
+        onDone();
+      }}
+      className="flex w-64 flex-col gap-2 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+    >
+      <textarea
+        autoFocus
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        onKeyDown={(e) => e.key === "Escape" && onDone()}
+        rows={2}
+        placeholder="Point-specific feedback…"
+        className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+      />
+      <div className="flex justify-between">
+        <button type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
+          Pin comment
+        </button>
+        <button type="button" onClick={onDone} className="text-xs text-[var(--color-text-muted)]">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export function CritiqueRoom({ binderId }: { binderId: string }) {
+  const { data: binder, isLoading } = useBinder(binderId);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
+
+  const pagesWithImages = (binder?.pages ?? [])
+    .map((p) => ({ page: p, image: p.content.find((b) => b.kind === "image") }))
+    .filter((p): p is { page: (typeof p)["page"]; image: NonNullable<(typeof p)["image"]> } => Boolean(p.image));
+
+  const selected = pagesWithImages.find((p) => p.page.id === selectedPageId) ?? pagesWithImages[0];
+  const { data: threads } = useCritiqueThreads(selected?.page.id);
+  const activeThread = threads?.find((t) => t.id === activeThreadId);
+
+  if (isLoading || !binder) {
+    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
+  }
+
+  if (!selected) {
+    return (
+      <div className="p-10 text-sm text-[var(--color-text-muted)]">
+        No work-in-progress images in this binder yet to critique.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6">
+      <div>
+        <p className="mb-1 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Critique Room</p>
+        <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
+          Point-specific feedback, pinned to the work
+        </h1>
+      </div>
+
+      {pagesWithImages.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {pagesWithImages.map(({ page }) => (
+            <button
+              key={page.id}
+              type="button"
+              onClick={() => {
+                setSelectedPageId(page.id);
+                setActiveThreadId(null);
+                setPendingPin(null);
+              }}
+              className="rounded-full border px-3 py-1 text-sm"
+              style={{
+                borderColor: page.id === selected.page.id ? "var(--color-accent)" : "var(--color-border)",
+                color: page.id === selected.page.id ? "var(--color-accent)" : "var(--color-text-muted)",
+              }}
+            >
+              {page.title}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-start gap-4">
+        <div
+          className="relative shrink-0 cursor-crosshair overflow-hidden rounded-[var(--radius-base)] border border-[var(--color-border)]"
+          style={{ width: 560 }}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            setActiveThreadId(null);
+            setPendingPin({ x, y });
+          }}
+        >
+          <img src={selected.image.url} alt={selected.image.caption ?? ""} className="block w-full" />
+          {threads?.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPendingPin(null);
+                setActiveThreadId(t.id);
+              }}
+              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-medium text-white shadow"
+              style={{
+                left: `${t.x}%`,
+                top: `${t.y}%`,
+                background: t.resolved ? "#22c55e" : "var(--color-accent)",
+              }}
+              title={t.comments[0]?.body}
+            >
+              {t.comments.length}
+            </button>
+          ))}
+        </div>
+
+        {activeThread ? (
+          <ThreadPanel pageId={selected.page.id} thread={activeThread} onClose={() => setActiveThreadId(null)} />
+        ) : pendingPin ? (
+          <NewPinForm
+            pageId={selected.page.id}
+            x={pendingPin.x}
+            y={pendingPin.y}
+            onDone={() => setPendingPin(null)}
+          />
+        ) : (
+          <p className="w-64 text-sm text-[var(--color-text-muted)]">
+            Click anywhere on the image to pin a comment to that exact spot.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

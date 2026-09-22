@@ -128,6 +128,7 @@ model Page {
   annotations MarginAnnotation[]
   cards       SpacedRepetitionCard[]
   revisions   PageRevision[]
+  critiqueThreads CritiqueThread[]
 
   @@index([binderId])
   @@index([tabDividerId])
@@ -308,4 +309,36 @@ model CaseAttempt {
 
   @@index([userId])
   @@index([caseId])
+}
+
+// Arts' signature feature: threaded, point-specific feedback pinned to a
+// position on an image block — Figma-comments-style, but for visual/physical
+// work-in-progress. Point-specific rather than page-level like margin notes,
+// since critique on a piece is inherently about a location within the image,
+// not a location within the surrounding text.
+model CritiqueThread {
+  id        String   @id @default(uuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  // Percentage position (0-100) within the image, so pins stay correctly
+  // placed regardless of the rendered image size.
+  x         Float
+  y         Float
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  comments CritiqueComment[]
+
+  @@index([pageId])
+}
+
+model CritiqueComment {
+  id         String         @id @default(uuid())
+  threadId   String
+  thread     CritiqueThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorName String
+  body       String
+  createdAt  DateTime       @default(now())
+
+  @@index([threadId])
 }

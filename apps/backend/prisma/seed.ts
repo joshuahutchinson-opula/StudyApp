@@ -22,6 +22,26 @@ function citationRef(citationId: string) {
 function formula(expression: string) {
   return { id: randomUUID(), kind: "formula" as const, expression };
 }
+function image(url: string, caption?: string) {
+  return { id: randomUUID(), kind: "image" as const, url, caption };
+}
+
+// A simple constructed line-art sketch (doorway + figure silhouette) as a
+// data URI — no external image dependency, matching the "doorway as
+// frame-within-frame" motif already established in the Arts seed content.
+const DOORWAY_SKETCH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="#f4f1ea"/>
+  <rect x="220" y="80" width="200" height="320" fill="none" stroke="#2a2a2a" stroke-width="3"/>
+  <rect x="250" y="110" width="140" height="260" fill="none" stroke="#2a2a2a" stroke-width="2" opacity="0.6"/>
+  <line x1="120" y1="400" x2="520" y2="400" stroke="#2a2a2a" stroke-width="2"/>
+  <line x1="120" y1="400" x2="220" y2="400" stroke="#2a2a2a" stroke-width="1.5"/>
+  <line x1="420" y1="400" x2="520" y2="400" stroke="#2a2a2a" stroke-width="1.5"/>
+  <line x1="220" y1="80" x2="120" y2="60" stroke="#2a2a2a" stroke-width="1" opacity="0.5"/>
+  <line x1="420" y1="80" x2="520" y2="60" stroke="#2a2a2a" stroke-width="1" opacity="0.5"/>
+  <ellipse cx="320" cy="240" rx="18" ry="24" fill="#2a2a2a" opacity="0.7"/>
+  <rect x="302" y="264" width="36" height="90" fill="#2a2a2a" opacity="0.7"/>
+</svg>`;
+const doorwaySketchUrl = `data:image/svg+xml;base64,${Buffer.from(DOORWAY_SKETCH_SVG).toString("base64")}`;
 
 async function seedMedicine() {
   const existing = await db.binder.findFirst({
@@ -684,6 +704,7 @@ async function seedArts() {
           "Thumb 4 has the strongest negative space — worth developing",
           "Recurring motif: the doorway as frame-within-frame",
         ]),
+        image(doorwaySketchUrl, "Thumb 4 — doorway study, ink"),
       ],
     },
   });
