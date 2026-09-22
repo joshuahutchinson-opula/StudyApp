@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
-import { useBinder, useUpdatePage } from "./api";
+import { useAddAnnotation, useBinder, useCreatePage, useUpdatePage } from "./api";
 import { useDueCards } from "../review/api";
 import { useCitations } from "../citations/api";
 import { PageTurn } from "./PageTurn";
@@ -25,6 +25,8 @@ export function BinderView({
 }) {
   const { data: binder, isLoading } = useBinder(binderId);
   const updatePage = useUpdatePage(binderId);
+  const addAnnotation = useAddAnnotation(binderId);
+  const createPage = useCreatePage(binderId);
   const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
   const { data: citations } = useCitations(DEMO_USER_ID, discipline);
   const [index, setIndex] = useState(0);
@@ -122,7 +124,12 @@ export function BinderView({
           navDirection={navDirection}
         >
           {current.type === "toc" ? (
-            <TableOfContents pages={pages} tabDividers={binder.tabDividers} onSelect={goToPageId} />
+            <TableOfContents
+              pages={pages}
+              tabDividers={binder.tabDividers}
+              onSelect={goToPageId}
+              onAddPage={(tabDividerId, title) => createPage.mutate({ tabDividerId, title })}
+            />
           ) : currentPage ? (
             <div className="relative flex h-full flex-col gap-6">
               <DogEar
@@ -142,7 +149,14 @@ export function BinderView({
                   />
                 </div>
               </div>
-              <PageContent blocks={currentPage.content} citations={citations} />
+              <PageContent
+                blocks={currentPage.content}
+                citations={citations}
+                annotations={currentPage.annotations}
+                onAddAnnotation={(anchorBlockId, body) =>
+                  addAnnotation.mutate({ pageId: currentPage.id, anchorBlockId, body })
+                }
+              />
             </div>
           ) : null}
         </PageTurn>
@@ -157,14 +171,57 @@ export function BinderView({
   );
 }
 
+function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-1 self-start text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+      >
+        + Add page
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!title.trim()) return;
+        onAdd(title.trim());
+        setTitle("");
+        setOpen(false);
+      }}
+      className="mt-1 flex gap-2"
+    >
+      <input
+        autoFocus
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={() => {
+          if (!title.trim()) setOpen(false);
+        }}
+        placeholder="Page title…"
+        className="flex-1 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+      />
+    </form>
+  );
+}
+
 function TableOfContents({
   pages,
   tabDividers,
   onSelect,
+  onAddPage,
 }: {
   pages: { id: string; title: string; tabDividerId: string | null }[];
   tabDividers: { id: string; label: string; color: string }[];
   onSelect: (pageId: string) => void;
+  onAddPage: (tabDividerId: string, title: string) => void;
 }) {
   return (
     <div>
@@ -174,26 +231,28 @@ function TableOfContents({
       <div className="flex flex-col gap-6">
         {tabDividers.map((tab) => {
           const tabPages = pages.filter((p) => p.tabDividerId === tab.id);
-          if (tabPages.length === 0) return null;
           return (
-            <div key={tab.id}>
+            <div key={tab.id} className="flex flex-col">
               <p className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
                 <span className="h-2 w-2 rounded-full" style={{ background: tab.color }} />
                 {tab.label}
               </p>
-              <ul className="flex flex-col divide-y divide-[var(--color-border)]">
-                {tabPages.map((page) => (
-                  <li key={page.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelect(page.id)}
-                      className="w-full py-2 text-left hover:text-[var(--color-accent)]"
-                    >
-                      {page.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              {tabPages.length > 0 && (
+                <ul className="flex flex-col divide-y divide-[var(--color-border)]">
+                  {tabPages.map((page) => (
+                    <li key={page.id}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(page.id)}
+                        className="w-full py-2 text-left hover:text-[var(--color-accent)]"
+                      >
+                        {page.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <AddPageInline onAdd={(title) => onAddPage(tab.id, title)} />
             </div>
           );
         })}

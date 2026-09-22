@@ -26,7 +26,7 @@ export async function binderRoutes(app: FastifyInstance) {
       where: { id: params.data.id },
       include: {
         tabDividers: { orderBy: { order: "asc" } },
-        pages: { orderBy: pageOrderBy },
+        pages: { orderBy: pageOrderBy, include: { annotations: { orderBy: { createdAt: "asc" } } } },
       },
     });
     if (!binder) return reply.code(404).send({ error: "Binder not found" });
@@ -79,5 +79,28 @@ export async function binderRoutes(app: FastifyInstance) {
       where: { id: params.data.id },
       data,
     });
+  });
+
+  const CreateAnnotationBody = z.object({
+    anchorBlockId: z.string().uuid(),
+    body: z.string().min(1),
+  });
+
+  app.post("/pages/:id/annotations", async (req, reply) => {
+    const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send(params.error.flatten());
+    const body = CreateAnnotationBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send(body.error.flatten());
+
+    return db.marginAnnotation.create({
+      data: { pageId: params.data.id, anchorBlockId: body.data.anchorBlockId, body: body.data.body },
+    });
+  });
+
+  app.delete("/annotations/:id", async (req, reply) => {
+    const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send(params.error.flatten());
+    await db.marginAnnotation.delete({ where: { id: params.data.id } });
+    return { ok: true };
   });
 }

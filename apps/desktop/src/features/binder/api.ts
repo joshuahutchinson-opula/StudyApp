@@ -34,3 +34,25 @@ export function useUpdatePage(binderId: string | undefined) {
     },
   });
 }
+
+export function useCreatePage(binderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { tabDividerId: string | null; title: string }) =>
+      api.post(`/binders/${binderId}/pages`, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["binder", binderId] });
+    },
+  });
+}
+
+export function useAddAnnotation(binderId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pageId, anchorBlockId, body }: { pageId: string; anchorBlockId: string; body: string }) =>
+      api.post(`/pages/${pageId}/annotations`, { anchorBlockId, body }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["binder", binderId] });
+    },
+  });
+}
