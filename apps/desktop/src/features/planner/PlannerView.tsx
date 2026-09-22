@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { Discipline, Task, TaskStatus } from "@the-desk/shared";
 import { useCreateDeadline, useCreateTask, useDeadlines, useTasks, useUpdateTaskStatus } from "./api";
+import { ListView } from "./ListView";
+import { CalendarView } from "./CalendarView";
+
+type ViewMode = "kanban" | "list" | "calendar";
 
 const COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "backlog", label: "Backlog" },
@@ -215,12 +219,31 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
   const createTask = useCreateTask(userId, discipline);
   const updateStatus = useUpdateTaskStatus(userId, discipline);
   const createDeadline = useCreateDeadline(userId);
+  const [view, setView] = useState<ViewMode>("kanban");
 
   return (
     <div className="mx-auto flex h-full max-w-6xl flex-col gap-6 px-4 py-6">
-      <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
-        Planner
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
+          Planner
+        </h1>
+        <div className="flex gap-1 rounded-[var(--radius-base)] border border-[var(--color-border)] p-0.5 text-sm">
+          {(["kanban", "list", "calendar"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              className="rounded-sm px-3 py-1 capitalize"
+              style={{
+                background: view === v ? "var(--color-accent)" : "transparent",
+                color: view === v ? "#fff" : "var(--color-text-muted)",
+              }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex items-center gap-4 overflow-x-auto border-b border-[var(--color-border)] pb-4">
         {deadlines?.map((d) => (
@@ -238,6 +261,10 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
 
       {isLoading || !tasks ? (
         <div className="text-sm text-[var(--color-text-muted)]">Loading tasks…</div>
+      ) : view === "list" ? (
+        <ListView tasks={tasks} />
+      ) : view === "calendar" ? (
+        <CalendarView tasks={tasks} deadlines={deadlines ?? []} />
       ) : (
         <div className="grid flex-1 grid-cols-4 gap-4">
           {COLUMNS.map((col) => {
