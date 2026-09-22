@@ -27,7 +27,7 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
   const today = new Date();
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-[var(--space-3)]">
       <div className="flex items-center justify-between">
         <SpringButton
           type="button"
@@ -36,7 +36,7 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
         >
           ‹ Prev
         </SpringButton>
-        <p className="text-sm font-medium">
+        <p className="text-sm" style={{ fontWeight: "var(--font-weight-display)" }}>
           {firstOfMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </p>
         <SpringButton
@@ -48,9 +48,9 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
         </SpringButton>
       </div>
 
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-border)]">
+      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-border)]">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="bg-[var(--color-surface)] px-2 py-1 text-center text-xs text-[var(--color-text-muted)]">
+          <div key={d} className="bg-[var(--color-surface)] px-[var(--space-2)] py-[var(--space-1)] text-center text-xs text-[var(--color-text-muted)]">
             {d}
           </div>
         ))}
@@ -60,9 +60,9 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
           const dayDeadlines = deadlines.filter((d) => isSameDay(new Date(d.dueAt as unknown as string), date));
           const isToday = isSameDay(date, today);
           return (
-            <div key={i} className="min-h-24 bg-[var(--color-surface)] p-1.5">
+            <div key={i} className="min-h-24 bg-[var(--color-surface)] p-[var(--space-1)]">
               <p
-                className="mb-1 text-xs"
+                className="mb-[var(--space-1)] text-xs"
                 style={{
                   color: isToday ? "#fff" : "var(--color-text-muted)",
                   background: isToday ? "var(--color-accent)" : "transparent",
@@ -76,11 +76,11 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
               >
                 {date.getDate()}
               </p>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-[var(--space-1)]">
                 {dayDeadlines.map((d) => (
                   <p
                     key={d.id}
-                    className="truncate rounded-sm px-1 text-xs"
+                    className="truncate rounded-[var(--radius-sm)] px-[var(--space-1)] text-xs"
                     style={{ background: "var(--color-accent)", color: "#fff" }}
                     title={d.title}
                   >
@@ -90,7 +90,7 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
                 {dayTasks.map((t) => (
                   <p
                     key={t.id}
-                    className="truncate rounded-sm border px-1 text-xs"
+                    className="truncate rounded-[var(--radius-sm)] border px-[var(--space-1)] text-xs"
                     style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
                     title={t.title}
                   >

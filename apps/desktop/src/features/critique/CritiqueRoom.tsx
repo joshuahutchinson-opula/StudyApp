@@ -22,7 +22,7 @@ function ThreadPanel({
   const resolveThread = useResolveThread(pageId);
 
   return (
-    <div className="flex w-72 flex-col gap-3 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+    <div className="flex w-72 flex-col gap-[var(--space-3)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-4)]">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           {thread.resolved ? "Resolved" : "Open"}
@@ -32,10 +32,10 @@ function ThreadPanel({
         </SpringButton>
       </div>
 
-      <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+      <div className="flex max-h-64 flex-col gap-[var(--space-2)] overflow-y-auto">
         {thread.comments.map((c) => (
           <div key={c.id} className="text-sm">
-            <p className="font-medium">{c.authorName}</p>
+            <p style={{ fontWeight: "var(--font-weight-body)" }}>{c.authorName}</p>
             <p className="text-[var(--color-text)]">{c.body}</p>
           </div>
         ))}
@@ -48,14 +48,14 @@ function ThreadPanel({
           addComment.mutate({ threadId: thread.id, authorName: AUTHOR, body: reply.trim() });
           setReply("");
         }}
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-[var(--space-2)]"
       >
         <textarea
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           rows={2}
           placeholder="Reply…"
-          className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+          className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-sm focus:outline-none"
         />
         <div className="flex justify-between">
           <SpringButton type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
@@ -96,7 +96,7 @@ function NewPinForm({
         createThread.mutate({ x, y, authorName: AUTHOR, body: body.trim() });
         onDone();
       }}
-      className="flex w-64 flex-col gap-2 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3"
+      className="flex w-64 flex-col gap-[var(--space-2)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-3)]"
     >
       <textarea
         autoFocus
@@ -105,7 +105,7 @@ function NewPinForm({
         onKeyDown={(e) => e.key === "Escape" && onDone()}
         rows={2}
         placeholder="Point-specific feedback…"
-        className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+        className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-sm focus:outline-none"
       />
       <div className="flex justify-between">
         <SpringButton type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
@@ -135,28 +135,28 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
   const activeThread = threads?.find((t) => t.id === activeThreadId);
 
   if (isLoading || !binder) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading…</div>;
   }
 
   if (!selected) {
     return (
-      <div className="p-10 text-sm text-[var(--color-text-muted)]">
+      <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">
         No work-in-progress images in this binder yet to critique.
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6">
+    <div className="mx-auto flex max-w-4xl flex-col gap-[var(--space-5)] px-[var(--space-4)] py-[var(--space-5)]">
       <div>
-        <p className="mb-1 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Critique Room</p>
+        <p className="mb-[var(--space-1)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Critique Room</p>
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
           Point-specific feedback, pinned to the work
         </h1>
       </div>
 
       {pagesWithImages.length > 1 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-[var(--space-2)]">
           {pagesWithImages.map(({ page }) => (
             <SpringButton
               key={page.id}
@@ -167,7 +167,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
                 setPendingPin(null);
               }}
               whileTap={{ scale: 0.95 }}
-              className="rounded-full border px-3 py-1 text-sm"
+              className="rounded-full border px-[var(--space-3)] py-[var(--space-1)] text-sm"
               style={{
                 borderColor: page.id === selected.page.id ? "var(--color-accent)" : "var(--color-border)",
                 color: page.id === selected.page.id ? "var(--color-accent)" : "var(--color-text-muted)",
@@ -179,9 +179,9 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
         </div>
       )}
 
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-[var(--space-4)]">
         <div
-          className="relative shrink-0 cursor-crosshair overflow-hidden rounded-[var(--radius-base)] border border-[var(--color-border)]"
+          className="relative shrink-0 cursor-crosshair overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)]"
           style={{ width: 560 }}
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
@@ -205,11 +205,12 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
               animate={{ scale: 1 }}
               whileTap={{ scale: 0.85 }}
               transition={spring.base}
-              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-medium text-white shadow"
+              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs text-white shadow"
               style={{
                 left: `${t.x}%`,
                 top: `${t.y}%`,
                 background: t.resolved ? "#22c55e" : "var(--color-accent)",
+                fontWeight: "var(--font-weight-body)",
               }}
               title={t.comments[0]?.body}
             >

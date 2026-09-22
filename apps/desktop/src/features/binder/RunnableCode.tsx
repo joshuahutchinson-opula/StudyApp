@@ -49,14 +49,14 @@ export function RunnableCode({ code }: { code: string }) {
   }
 
   return (
-    <div className="mt-2">
-      <div className="flex items-center gap-2">
+    <div className="mt-[var(--space-2)]">
+      <div className="flex items-center gap-[var(--space-2)]">
         <SpringButton
           type="button"
           onClick={run}
           disabled={running}
           whileTap={running ? undefined : { scale: 0.92 }}
-          className="rounded-[var(--radius-base)] px-3 py-1 text-xs disabled:opacity-50"
+          className="rounded-[var(--radius-sm)] px-[var(--space-3)] py-[var(--space-1)] text-xs disabled:opacity-50"
           style={{ background: "var(--color-accent)", color: "#0b0d12", fontFamily: "var(--font-mono)" }}
         >
           {running ? "running…" : "▸ run"}
@@ -66,7 +66,7 @@ export function RunnableCode({ code }: { code: string }) {
       <iframe ref={iframeRef} sandbox="allow-scripts" style={{ display: "none" }} title="code-sandbox" />
       {(output || error) && (
         <pre
-          className="mt-2 overflow-x-auto rounded-[var(--radius-base)] p-3 text-xs"
+          className="mt-[var(--space-2)] overflow-x-auto rounded-[var(--radius-lg)] p-[var(--space-3)] text-xs"
           style={{
             background: "#0b0d12",
             color: error ? "#f87171" : "#5eead4",

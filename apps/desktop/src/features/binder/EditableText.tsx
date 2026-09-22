@@ -40,7 +40,7 @@ export function EditableText({
           }
         }}
         rows={multiline ? 3 : undefined}
-        className={`w-full rounded-sm border border-[var(--color-accent)] bg-transparent focus:outline-none ${className ?? ""}`}
+        className={`w-full rounded-[var(--radius-sm)] border border-[var(--color-accent)] bg-transparent focus:outline-none ${className ?? ""}`}
         style={style}
       />
     );
@@ -49,7 +49,7 @@ export function EditableText({
   return (
     <Tag
       onClick={() => setEditing(true)}
-      className={`cursor-text rounded-sm hover:bg-[var(--color-surface)] ${className ?? ""}`}
+      className={`cursor-text rounded-[var(--radius-sm)] hover:bg-[var(--color-surface)] ${className ?? ""}`}
       style={style}
       title="Click to edit"
     >

@@ -51,7 +51,7 @@ function renderBlock(
       const ListTag = block.ordered ? "ol" : "ul";
       return (
         <ListTag
-          className={`flex flex-col gap-1.5 pl-5 text-[var(--color-text)] ${block.ordered ? "list-decimal" : "list-disc"}`}
+          className={`flex flex-col gap-[var(--space-1)] pl-[var(--space-4)] text-[var(--color-text)] ${block.ordered ? "list-decimal" : "list-disc"}`}
         >
           {block.items.map((item, i) => (
             <li key={i}>{item}</li>
@@ -63,7 +63,7 @@ function renderBlock(
       return (
         <div>
           <pre
-            className="overflow-x-auto rounded-[var(--radius-base)] bg-[var(--color-surface)] p-4 text-sm"
+            className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--color-surface)] p-[var(--space-4)] text-sm"
             style={{ fontFamily: "var(--font-mono)", border: "1px solid var(--color-border)" }}
           >
             <code>{block.code}</code>
@@ -74,16 +74,16 @@ function renderBlock(
     case "image":
       return (
         <figure>
-          <img src={block.url} alt={block.caption ?? ""} className="rounded-[var(--radius-base)]" />
+          <img src={block.url} alt={block.caption ?? ""} className="rounded-[var(--radius-lg)]" />
           {block.caption && (
-            <figcaption className="mt-1 text-sm text-[var(--color-text-muted)]">{block.caption}</figcaption>
+            <figcaption className="mt-[var(--space-1)] text-sm text-[var(--color-text-muted)]">{block.caption}</figcaption>
           )}
         </figure>
       );
     case "citationRef": {
       const citation = citations.find((c) => c.id === block.citationId);
       return (
-        <p className="border-l-2 pl-3 text-sm text-[var(--color-text-muted)]" style={{ borderColor: "var(--color-accent)" }}>
+        <p className="border-l-2 pl-[var(--space-3)] text-sm text-[var(--color-text-muted)]" style={{ borderColor: "var(--color-accent)" }}>
           {citation ? citation.formatted : "[citation not found]"}
         </p>
       );
@@ -113,7 +113,7 @@ export function PageContent({
   onEditText?: (blockId: string, text: string) => void;
 }) {
   return (
-    <div className="grid gap-x-6 gap-y-4" style={{ gridTemplateColumns: "1fr 180px" }}>
+    <div className="grid gap-x-[var(--space-5)] gap-y-[var(--space-4)]" style={{ gridTemplateColumns: "1fr 180px" }}>
       {blocks.map((block) => (
         <div key={block.id} className="contents">
           <div>{renderBlock(block, citations, onEditText)}</div>

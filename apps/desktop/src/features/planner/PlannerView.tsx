@@ -27,12 +27,12 @@ function relativeDay(dueAt: string): string {
 function MoveButtons({ status, onMove }: { status: TaskStatus; onMove: (status: TaskStatus) => void }) {
   const currentIdx = COLUMNS.findIndex((c) => c.status === status);
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-[var(--space-1)]">
       {currentIdx > 0 && (
         <SpringButton
           type="button"
           onClick={() => onMove(COLUMNS[currentIdx - 1]!.status)}
-          className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="rounded-[var(--radius-sm)] px-[var(--space-1)] py-[var(--space-1)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           aria-label={`Move back to ${COLUMNS[currentIdx - 1]!.label}`}
         >
           ‹
@@ -42,7 +42,7 @@ function MoveButtons({ status, onMove }: { status: TaskStatus; onMove: (status: 
         <SpringButton
           type="button"
           onClick={() => onMove(COLUMNS[currentIdx + 1]!.status)}
-          className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="rounded-[var(--radius-sm)] px-[var(--space-1)] py-[var(--space-1)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           aria-label={`Move forward to ${COLUMNS[currentIdx + 1]!.label}`}
         >
           ›
@@ -74,9 +74,9 @@ function TaskCard({
   const doneCount = subtasks.filter((s) => s.status === "done").length;
 
   return (
-    <div className="rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-3)]">
       <p className="text-sm">{task.title}</p>
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-[var(--space-2)] flex items-center justify-between">
         <span className="text-xs text-[var(--color-text-muted)]">
           {subtasks.length > 0
             ? `${doneCount}/${subtasks.length} subtasks`
@@ -88,14 +88,14 @@ function TaskCard({
       </div>
 
       {subtasks.length > 0 && (
-        <ul className="mt-2 flex flex-col gap-1 border-t border-[var(--color-border)] pt-2">
+        <ul className="mt-[var(--space-2)] flex flex-col gap-[var(--space-1)] border-t border-[var(--color-border)] pt-[var(--space-2)]">
           {subtasks.map((s) => (
-            <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
+            <li key={s.id} className="flex items-center justify-between gap-[var(--space-2)] text-xs">
               <motion.button
                 type="button"
                 onClick={() => onMoveSubtask(s.id, s.status === "done" ? "todo" : "done")}
                 whileTap={{ scale: 0.97 }}
-                className="flex flex-1 items-center gap-1.5 text-left"
+                className="flex flex-1 items-center gap-[var(--space-1)] text-left"
                 style={{
                   color: s.status === "done" ? "var(--color-text-muted)" : "var(--color-text)",
                   textDecoration: s.status === "done" ? "line-through" : "none",
@@ -127,21 +127,21 @@ function TaskCard({
             onAddSubtask(input.value.trim());
             setAddingSubtask(false);
           }}
-          className="mt-2"
+          className="mt-[var(--space-2)]"
         >
           <input
             name="title"
             autoFocus
             onBlur={() => setAddingSubtask(false)}
             placeholder="Subtask title…"
-            className="w-full rounded-sm border border-[var(--color-border)] bg-transparent px-1.5 py-1 text-xs focus:outline-none"
+            className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-1)] py-[var(--space-1)] text-xs focus:outline-none"
           />
         </form>
       ) : (
         <SpringButton
           type="button"
           onClick={() => setAddingSubtask(true)}
-          className="mt-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="mt-[var(--space-2)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           + subtask
         </SpringButton>
@@ -160,7 +160,7 @@ function AddDeadlineForm({ onAdd }: { onAdd: (title: string, dueAt: string) => v
       <SpringButton
         type="button"
         onClick={() => setOpen(true)}
-        className="shrink-0 self-center rounded-[var(--radius-base)] border border-dashed border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        className="shrink-0 self-center rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border)] px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         + Deadline
       </SpringButton>
@@ -177,7 +177,7 @@ function AddDeadlineForm({ onAdd }: { onAdd: (title: string, dueAt: string) => v
         setDueAt("");
         setOpen(false);
       }}
-      className="flex shrink-0 items-center gap-2 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
+      className="flex shrink-0 items-center gap-[var(--space-2)] rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[var(--space-3)] py-[var(--space-2)]"
     >
       <input
         autoFocus
@@ -214,7 +214,7 @@ function QuickAdd({ onAdd }: { onAdd: (title: string) => void }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Add a task…"
-        className="w-full rounded-[var(--radius-base)] border border-dashed border-[var(--color-border)] bg-transparent px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-solid focus:outline-none"
+        className="w-full rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border)] bg-transparent px-[var(--space-3)] py-[var(--space-2)] text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:border-solid focus:outline-none"
       />
     </form>
   );
@@ -230,25 +230,25 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
   const [view, setView] = useState<ViewMode>("kanban");
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col gap-6 px-4 py-6">
+    <div className="mx-auto flex h-full max-w-6xl flex-col gap-[var(--space-5)] px-[var(--space-4)] py-[var(--space-5)]">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
           Planner
         </h1>
-        <div className="flex gap-1 rounded-[var(--radius-base)] border border-[var(--color-border)] p-0.5 text-sm">
+        <div className="flex gap-[var(--space-1)] rounded-[var(--radius-sm)] border border-[var(--color-border)] p-[var(--space-1)] text-sm">
           {(["kanban", "list", "calendar"] as const).map((v) => (
             <motion.button
               key={v}
               type="button"
               onClick={() => setView(v)}
               whileTap={{ scale: 0.94 }}
-              className="relative rounded-sm px-3 py-1 capitalize"
+              className="relative rounded-[var(--radius-sm)] px-[var(--space-3)] py-[var(--space-1)] capitalize"
               style={{ color: view === v ? "#fff" : "var(--color-text-muted)" }}
             >
               {view === v && (
                 <motion.span
                   layoutId="planner-view-indicator"
-                  className="absolute inset-0 rounded-sm"
+                  className="absolute inset-0 rounded-[var(--radius-sm)]"
                   style={{ background: "var(--color-accent)", zIndex: -1 }}
                   transition={spring.base}
                 />
@@ -259,11 +259,11 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
         </div>
       </div>
 
-      <div className="flex items-center gap-4 overflow-x-auto border-b border-[var(--color-border)] pb-4">
+      <div className="flex items-center gap-[var(--space-4)] overflow-x-auto border-b border-[var(--color-border)] pb-[var(--space-4)]">
         {deadlines?.map((d) => (
           <div
             key={d.id}
-            className="shrink-0 rounded-[var(--radius-base)] px-3 py-2 text-sm"
+            className="shrink-0 rounded-[var(--radius-sm)] px-[var(--space-3)] py-[var(--space-2)] text-sm"
             style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
           >
             <p>{d.title}</p>
@@ -280,18 +280,18 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
       ) : view === "calendar" ? (
         <CalendarView tasks={tasks} deadlines={deadlines ?? []} />
       ) : (
-        <div className="grid flex-1 grid-cols-4 gap-4">
+        <div className="grid flex-1 grid-cols-4 gap-[var(--space-4)]">
           {COLUMNS.map((col) => {
             // Only top-level tasks get their own column position — a subtask
             // renders nested inside its parent's card regardless of which
             // column that parent is in (see TaskCard).
             const colTasks = tasks.filter((t) => t.status === col.status && !t.parentTaskId);
             return (
-              <div key={col.status} className="flex flex-col gap-2">
+              <div key={col.status} className="flex flex-col gap-[var(--space-2)]">
                 <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                   {col.label} · {colTasks.length}
                 </p>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-[var(--space-2)]">
                   {colTasks.map((task) => (
                     <TaskCard
                       key={task.id}

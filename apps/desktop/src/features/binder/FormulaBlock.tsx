@@ -36,11 +36,11 @@ export function FormulaBlock({ expression }: { expression: string }) {
 
   return (
     <div
-      className="flex flex-col gap-1 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+      className="flex flex-col gap-[var(--space-1)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-4)]"
       style={{ fontFamily: "var(--font-mono)" }}
     >
       {results.map((r, i) => (
-        <div key={i} className="flex items-baseline justify-between gap-4 text-sm">
+        <div key={i} className="flex items-baseline justify-between gap-[var(--space-4)] text-sm">
           <span className="text-[var(--color-text)]">{r.input}</span>
           {r.error ? (
             <span className="text-right" style={{ color: "#dc2626" }}>

@@ -28,29 +28,29 @@ export function ListView({ tasks }: { tasks: Task[] }) {
   });
 
   return (
-    <div className="flex flex-col divide-y divide-[var(--color-border)] rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="grid grid-cols-[1fr_120px_100px] gap-2 px-4 py-2 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+    <div className="flex flex-col divide-y divide-[var(--color-border)] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="grid grid-cols-[1fr_120px_100px] gap-[var(--space-2)] px-[var(--space-4)] py-[var(--space-2)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
         <span>Task</span>
         <span>Status</span>
         <span>Due</span>
       </div>
       {sorted.length === 0 && (
-        <p className="px-4 py-6 text-sm text-[var(--color-text-muted)]">No tasks yet.</p>
+        <p className="px-[var(--space-4)] py-[var(--space-6)] text-sm text-[var(--color-text-muted)]">No tasks yet.</p>
       )}
       {sorted.map((task) => {
         const subtasks = tasks.filter((t) => t.parentTaskId === task.id);
         const doneCount = subtasks.filter((s) => s.status === "done").length;
         return (
-          <div key={task.id} className="grid grid-cols-[1fr_120px_100px] items-center gap-2 px-4 py-2.5 text-sm">
+          <div key={task.id} className="grid grid-cols-[1fr_120px_100px] items-center gap-[var(--space-2)] px-[var(--space-4)] py-[var(--space-2)] text-sm">
             <span>
               {task.title}
               {subtasks.length > 0 && (
-                <span className="ml-2 text-xs text-[var(--color-text-muted)]">
+                <span className="ml-[var(--space-2)] text-xs text-[var(--color-text-muted)]">
                   {doneCount}/{subtasks.length}
                 </span>
               )}
             </span>
-            <span className="flex items-center gap-1.5 text-xs">
+            <span className="flex items-center gap-[var(--space-1)] text-xs">
               <span
                 aria-hidden
                 className="h-1.5 w-1.5 rounded-full"

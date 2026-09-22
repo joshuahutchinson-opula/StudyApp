@@ -23,7 +23,7 @@ function DifferentialInput({
 
   return (
     <div>
-      <div className="mb-2 flex flex-wrap gap-2">
+      <div className="mb-[var(--space-2)] flex flex-wrap gap-[var(--space-2)]">
         <AnimatePresence>
           {entries.map((entry) => (
             <motion.span
@@ -33,7 +33,7 @@ function DifferentialInput({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={spring.base}
-              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm"
+              className="flex items-center gap-[var(--space-1)] rounded-full px-[var(--space-3)] py-[var(--space-1)] text-sm"
               style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
             >
               {entry}
@@ -61,7 +61,7 @@ function DifferentialInput({
         }}
         onBlur={commit}
         placeholder="Type a diagnosis, press Enter…"
-        className="w-full rounded-[var(--radius-base)] border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm placeholder:text-[var(--color-text-muted)] focus:outline-none"
+        className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-3)] py-[var(--space-2)] text-sm placeholder:text-[var(--color-text-muted)] focus:outline-none"
       />
     </div>
   );
@@ -70,8 +70,8 @@ function DifferentialInput({
 function FeedbackPanel({ result, onRetry }: { result: CaseAttemptResult; onRetry: () => void }) {
   const { feedback } = result;
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-baseline gap-4">
+    <div className="flex flex-col gap-[var(--space-5)]">
+      <div className="flex items-baseline gap-[var(--space-4)]">
         <p className="text-4xl" style={{ fontFamily: "var(--font-display)" }}>
           {result.score}
         </p>
@@ -79,11 +79,11 @@ function FeedbackPanel({ result, onRetry }: { result: CaseAttemptResult; onRetry
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">
+        <p className="mb-[var(--space-2)] text-sm" style={{ fontWeight: "var(--font-weight-body)" }}>
           Differential — {feedback.differentialScore}
           <span className="text-[var(--color-text-muted)]">/100</span>
         </p>
-        <ul className="flex flex-col gap-1 text-sm">
+        <ul className="flex flex-col gap-[var(--space-1)] text-sm">
           {feedback.differential.matchedPrimary.map((d) => (
             <li key={d} style={{ color: "#22c55e" }}>✓ {d} — the key diagnosis</li>
           ))}
@@ -100,11 +100,11 @@ function FeedbackPanel({ result, onRetry }: { result: CaseAttemptResult; onRetry
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium">
+        <p className="mb-[var(--space-2)] text-sm" style={{ fontWeight: "var(--font-weight-body)" }}>
           Workup — {feedback.testScore}
           <span className="text-[var(--color-text-muted)]">/100</span>
         </p>
-        <ul className="flex flex-col gap-1 text-sm">
+        <ul className="flex flex-col gap-[var(--space-1)] text-sm">
           {feedback.tests.appropriate.map((t) => (
             <li key={t} style={{ color: "#22c55e" }}>✓ {t} — indicated</li>
           ))}
@@ -121,7 +121,7 @@ function FeedbackPanel({ result, onRetry }: { result: CaseAttemptResult; onRetry
         type="button"
         onClick={onRetry}
         whileTap={{ scale: 0.95 }}
-        className="self-start rounded-[var(--radius-base)] px-4 py-2 text-sm"
+        className="self-start rounded-[var(--radius-sm)] px-[var(--space-4)] py-[var(--space-2)] text-sm"
         style={{ background: "var(--color-accent)", color: "#fff" }}
       >
         Try again
@@ -142,7 +142,7 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
   const [result, setResult] = useState<CaseAttemptResult | null>(null);
 
   if (casesLoading || caseLoading || !clinicalCase) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading case…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading case…</div>;
   }
 
   function toggleTest(test: string) {
@@ -156,27 +156,27 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
-      <p className="mb-1 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+    <div className="mx-auto max-w-3xl px-[var(--space-4)] py-[var(--space-5)]">
+      <p className="mb-[var(--space-1)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
         Clinical reasoning
       </p>
-      <h1 className="mb-4 text-2xl" style={{ fontFamily: "var(--font-display)" }}>
+      <h1 className="mb-[var(--space-4)] text-2xl" style={{ fontFamily: "var(--font-display)" }}>
         {clinicalCase.title}
       </h1>
-      <p className="mb-8 leading-relaxed text-[var(--color-text)]">{clinicalCase.vignette}</p>
+      <p className="mb-[var(--space-6)] leading-relaxed text-[var(--color-text)]">{clinicalCase.vignette}</p>
 
       {result ? (
         <FeedbackPanel result={result} onRetry={reset} />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-[var(--space-6)]">
           <div>
-            <p className="mb-2 text-sm font-medium">Your differential</p>
+            <p className="mb-[var(--space-2)] text-sm" style={{ fontWeight: "var(--font-weight-body)" }}>Your differential</p>
             <DifferentialInput entries={differential} onChange={setDifferential} />
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium">Order your workup</p>
-            <div className="grid grid-cols-2 gap-2">
+            <p className="mb-[var(--space-2)] text-sm" style={{ fontWeight: "var(--font-weight-body)" }}>Order your workup</p>
+            <div className="grid grid-cols-2 gap-[var(--space-2)]">
               {clinicalCase.testChoices.map((test) => (
                 <motion.label
                   key={test}
@@ -185,7 +185,7 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
                     borderColor: tests.includes(test) ? "var(--color-accent)" : "var(--color-border)",
                   }}
                   transition={spring.fast}
-                  className="flex items-center gap-2 rounded-[var(--radius-base)] border px-3 py-2 text-sm"
+                  className="flex items-center gap-[var(--space-2)] rounded-[var(--radius-sm)] border px-[var(--space-3)] py-[var(--space-2)] text-sm"
                 >
                   <input
                     type="checkbox"
@@ -208,7 +208,7 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
               )
             }
             whileTap={differential.length === 0 || submitAttempt.isPending ? undefined : { scale: 0.95 }}
-            className="self-start rounded-[var(--radius-base)] px-5 py-2.5 text-sm disabled:opacity-40"
+            className="self-start rounded-[var(--radius-sm)] px-[var(--space-5)] py-[var(--space-3)] text-sm disabled:opacity-40"
             style={{ background: "var(--color-accent)", color: "#fff" }}
           >
             {submitAttempt.isPending ? "Grading…" : "Submit"}

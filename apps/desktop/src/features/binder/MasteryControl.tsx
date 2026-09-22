@@ -21,7 +21,7 @@ export function MasteryControl({
   const spring = useSpring();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-[var(--space-2)]">
       {LEVELS.map((l) => (
         <motion.button
           key={l}
@@ -38,7 +38,7 @@ export function MasteryControl({
           }}
         />
       ))}
-      <span className="ml-1 text-xs capitalize text-[var(--color-text-muted)]">{level}</span>
+      <span className="ml-[var(--space-1)] text-xs capitalize text-[var(--color-text-muted)]">{level}</span>
     </div>
   );
 }

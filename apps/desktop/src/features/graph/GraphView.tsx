@@ -215,12 +215,12 @@ export function GraphView({
   }, [linkMode, data]);
 
   if (isLoading || !data) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading graph…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading graph…</div>;
   }
 
   if (data.nodes.length === 0) {
     return (
-      <div className="p-10 text-sm text-[var(--color-text-muted)]">
+      <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">
         Nothing to graph yet — pages, flashcards, and tasks will show up here as you add them.
       </div>
     );
@@ -228,12 +228,12 @@ export function GraphView({
 
   return (
     <div className="relative h-[calc(100vh-49px)]">
-      <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
+      <div className="absolute left-3 top-3 z-10 flex items-center gap-[var(--space-2)]">
         <SpringButton
           type="button"
           onClick={() => setLinkMode((v) => !v)}
           whileTap={{ scale: 0.95 }}
-          className="rounded-full px-3 py-1.5 text-xs"
+          className="rounded-full px-[var(--space-3)] py-[var(--space-1)] text-xs"
           style={{
             background: linkMode ? "var(--color-accent)" : "var(--color-surface)",
             color: linkMode ? "#fff" : "var(--color-text-muted)",
@@ -246,7 +246,7 @@ export function GraphView({
       <div ref={containerRef} className="h-full w-full" />
       {hover && (
         <div
-          className="pointer-events-none absolute z-10 rounded-[var(--radius-base)] px-2.5 py-1.5 text-xs"
+          className="pointer-events-none absolute z-10 rounded-[var(--radius-sm)] px-[var(--space-2)] py-[var(--space-1)] text-xs"
           style={{
             left: hover.x + 12,
             top: hover.y + 12,

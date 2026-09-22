@@ -69,7 +69,7 @@ export function BinderView({
   }, [initialPageId, items.length]);
 
   if (isLoading || !binder) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Opening binder…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Opening binder…</div>;
   }
 
   const tabDividers = binder.tabDividers;
@@ -110,7 +110,7 @@ export function BinderView({
 
   return (
     <div className="mx-auto flex h-full max-w-5xl flex-col">
-      <div className="flex items-baseline justify-between px-4 pt-6">
+      <div className="flex items-baseline justify-between px-[var(--space-4)] pt-[var(--space-5)]">
         <div>
           <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
             {binder.discipline}
@@ -119,13 +119,13 @@ export function BinderView({
             {binder.title}
           </h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-[var(--space-4)]">
           {dueCards && dueCards.length > 0 && (
             <SpringButton
               type="button"
               onClick={onOpenReview}
               whileTap={{ scale: 0.95 }}
-              className="rounded-full px-3 py-1 text-sm"
+              className="rounded-full px-[var(--space-3)] py-[var(--space-1)] text-sm"
               style={{ background: "var(--color-accent)", color: "#fff" }}
             >
               Review · {dueCards.length} due
@@ -141,7 +141,7 @@ export function BinderView({
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 px-4 py-4">
+      <div className="flex flex-1 gap-[var(--space-4)] px-[var(--space-4)] py-[var(--space-4)]">
         <TabRail
           tabDividers={binder.tabDividers}
           activeTabId={currentPage?.tabDividerId ?? null}
@@ -165,7 +165,7 @@ export function BinderView({
               onReorder={handleTabReorder}
             />
           ) : currentPage ? (
-            <div className="relative flex h-full flex-col gap-6">
+            <div className="relative flex h-full flex-col gap-[var(--space-5)]">
               <DogEar
                 reviewed={currentPage.reviewed}
                 onToggle={() =>
@@ -176,7 +176,7 @@ export function BinderView({
                 <h2 className="text-xl" style={{ fontFamily: "var(--font-display)" }}>
                   {currentPage.title}
                 </h2>
-                <div className="mt-2">
+                <div className="mt-[var(--space-2)]">
                   <MasteryControl
                     level={currentPage.masteryLevel}
                     onChange={(level) => updatePage.mutate({ pageId: currentPage.id, masteryLevel: level })}
@@ -222,7 +222,7 @@ function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
       <SpringButton
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-1 self-start text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        className="mt-[var(--space-1)] self-start text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         + Add page
       </SpringButton>
@@ -238,7 +238,7 @@ function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
         setTitle("");
         setOpen(false);
       }}
-      className="mt-1 flex gap-2"
+      className="mt-[var(--space-1)] flex gap-[var(--space-2)]"
     >
       <input
         autoFocus
@@ -248,7 +248,7 @@ function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
           if (!title.trim()) setOpen(false);
         }}
         placeholder="Page title…"
-        className="flex-1 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
+        className="flex-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-sm focus:outline-none"
       />
     </form>
   );
@@ -276,13 +276,13 @@ function SortableTocEntry({
       layout
       transition={spring.base}
       style={{ transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.4 : 1 }}
-      className="flex items-center gap-2"
+      className="flex items-center gap-[var(--space-2)]"
     >
       <span
         {...attributes}
         {...listeners}
         aria-label="Drag to reorder"
-        className="cursor-grab select-none px-1 py-2 text-[var(--color-text-muted)] active:cursor-grabbing"
+        className="cursor-grab select-none px-[var(--space-1)] py-[var(--space-2)] text-[var(--color-text-muted)] active:cursor-grabbing"
       >
         ⠿
       </span>
@@ -290,7 +290,7 @@ function SortableTocEntry({
         type="button"
         onClick={() => onSelect(page.id)}
         whileTap={{ scale: 0.98 }}
-        className="w-full py-2 text-left hover:text-[var(--color-accent)]"
+        className="w-full py-[var(--space-2)] text-left hover:text-[var(--color-accent)]"
       >
         {page.title}
       </SpringButton>
@@ -324,7 +324,10 @@ function TocTabSection({
 
   return (
     <div className="flex flex-col">
-      <p className="mb-2 flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)]">
+      <p
+        className="mb-[var(--space-2)] flex items-center gap-[var(--space-2)] text-sm text-[var(--color-text-muted)]"
+        style={{ fontWeight: "var(--font-weight-body)" }}
+      >
         <span className="h-2 w-2 rounded-full" style={{ background: tab.color }} />
         {tab.label}
       </p>
@@ -358,10 +361,10 @@ function TableOfContents({
 }) {
   return (
     <div>
-      <h2 className="mb-6 text-xl" style={{ fontFamily: "var(--font-display)" }}>
+      <h2 className="mb-[var(--space-5)] text-xl" style={{ fontFamily: "var(--font-display)" }}>
         Table of Contents
       </h2>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-[var(--space-5)]">
         {tabDividers.map((tab) => {
           const tabPages = pages.filter((p) => p.tabDividerId === tab.id);
           return (

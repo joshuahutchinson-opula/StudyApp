@@ -73,7 +73,7 @@ export function FocusTimer({ userId }: { userId: string }) {
   const remaining = target !== null ? Math.max(0, target - elapsedSeconds) : elapsedSeconds;
 
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-6 px-6 py-16 text-center">
+    <div className="mx-auto flex max-w-md flex-col items-center gap-[var(--space-5)] px-[var(--space-5)] py-[var(--space-8)] text-center">
       <div>
         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Focus</p>
         <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)" }}>
@@ -87,7 +87,7 @@ export function FocusTimer({ userId }: { userId: string }) {
 
       {!running ? (
         <>
-          <div className="flex gap-2">
+          <div className="flex gap-[var(--space-2)]">
             {(Object.keys(MODE_TARGET_SECONDS) as StudyMode[]).map((m) => (
               <motion.button
                 key={m}
@@ -99,7 +99,7 @@ export function FocusTimer({ userId }: { userId: string }) {
                   color: mode === m ? "var(--color-accent)" : "var(--color-text-muted)",
                 }}
                 transition={spring.fast}
-                className="rounded-[var(--radius-base)] border px-3 py-1.5 text-sm"
+                className="rounded-[var(--radius-sm)] border px-[var(--space-3)] py-[var(--space-1)] text-sm"
               >
                 {MODE_LABEL[m]}
               </motion.button>
@@ -109,7 +109,7 @@ export function FocusTimer({ userId }: { userId: string }) {
             type="button"
             onClick={start}
             whileTap={{ scale: 0.92 }}
-            className="rounded-[var(--radius-base)] px-6 py-2.5 text-sm"
+            className="rounded-[var(--radius-sm)] px-[var(--space-5)] py-[var(--space-2)] text-sm"
             style={{ background: "var(--color-accent)", color: "#fff" }}
           >
             Start
@@ -120,7 +120,7 @@ export function FocusTimer({ userId }: { userId: string }) {
           type="button"
           onClick={stop}
           whileTap={{ scale: 0.92 }}
-          className="rounded-[var(--radius-base)] border border-[var(--color-border)] px-6 py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-[var(--space-5)] py-[var(--space-2)] text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           Stop
         </SpringButton>

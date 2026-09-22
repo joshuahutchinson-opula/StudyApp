@@ -32,7 +32,7 @@ export function ReviewSession({
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
 
   if (isLoading) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading review queue…</div>;
+    return <div className="p-[var(--space-7)] text-sm text-[var(--color-text-muted)]">Loading review queue…</div>;
   }
 
   const queue = (dueCards ?? []).filter((c) => !reviewedIds.includes(c.id));
@@ -46,8 +46,8 @@ export function ReviewSession({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-[var(--space-5)]">
+      <div className="mb-[var(--space-5)] flex items-center justify-between">
         <SpringButton
           type="button"
           onClick={onExit}
@@ -61,11 +61,11 @@ export function ReviewSession({
       </div>
 
       {!current ? (
-        <div className="rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10 text-center">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-7)] text-center">
           <p className="text-xl" style={{ fontFamily: "var(--font-display)" }}>
             All caught up
           </p>
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+          <p className="mt-[var(--space-2)] text-sm text-[var(--color-text-muted)]">
             {reviewedIds.length > 0
               ? `Reviewed ${reviewedIds.length} card${reviewedIds.length === 1 ? "" : "s"} this session.`
               : "No cards are due right now."}
@@ -90,10 +90,10 @@ export function ReviewSession({
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div
-                  className="absolute inset-0 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10"
+                  className="absolute inset-0 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-7)]"
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <p className="mb-4 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                  <p className="mb-[var(--space-4)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                     Question — click to reveal
                   </p>
                   <p className="text-lg leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
@@ -101,10 +101,10 @@ export function ReviewSession({
                   </p>
                 </div>
                 <div
-                  className="relative rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10"
+                  className="relative rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-7)]"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
                 >
-                  <p className="mb-4 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Answer</p>
+                  <p className="mb-[var(--space-4)] text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Answer</p>
                   <p className="text-lg leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
                     {current.back}
                   </p>
@@ -112,7 +112,7 @@ export function ReviewSession({
               </motion.button>
             </div>
 
-            <div className="mt-6 grid grid-cols-4 gap-2">
+            <div className="mt-[var(--space-5)] grid grid-cols-4 gap-[var(--space-2)]">
               {GRADE_BUTTONS.map((btn) => (
                 <motion.button
                   key={btn.grade}
@@ -122,10 +122,10 @@ export function ReviewSession({
                   whileTap={revealed ? { scale: 0.92 } : undefined}
                   animate={{ opacity: revealed ? 1 : 0.3 }}
                   transition={spring.fast}
-                  className="flex flex-col items-center gap-1 rounded-[var(--radius-base)] border py-3 text-sm disabled:cursor-not-allowed"
+                  className="flex flex-col items-center gap-[var(--space-1)] rounded-[var(--radius-sm)] border py-[var(--space-3)] text-sm disabled:cursor-not-allowed"
                   style={{ borderColor: btn.color, color: btn.color }}
                 >
-                  <span className="font-medium">{btn.label}</span>
+                  <span style={{ fontWeight: "var(--font-weight-body)" }}>{btn.label}</span>
                   <span className="text-xs opacity-70">{btn.hint}</span>
                 </motion.button>
               ))}
