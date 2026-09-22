@@ -13,11 +13,11 @@ export function MarginNote({
   const [draft, setDraft] = useState("");
 
   return (
-    <div className="flex flex-col gap-1.5 pt-1">
+    <div className="flex flex-col gap-[var(--space-1)] pt-[var(--space-1)]">
       {annotations.map((a) => (
         <p
           key={a.id}
-          className="rounded-sm px-2 py-1.5 text-xs leading-snug"
+          className="rounded-[var(--radius-sm)] px-[var(--space-2)] py-[var(--space-1)] text-xs leading-snug"
           style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
         >
           {a.body}
@@ -33,7 +33,7 @@ export function MarginNote({
             setDraft("");
             setAdding(false);
           }}
-          className="flex flex-col gap-1"
+          className="flex flex-col gap-[var(--space-1)]"
         >
           <textarea
             autoFocus
@@ -54,7 +54,7 @@ export function MarginNote({
             }}
             rows={2}
             placeholder="Margin note… (Enter to save)"
-            className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-xs focus:outline-none"
+            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-transparent px-[var(--space-2)] py-[var(--space-1)] text-xs focus:outline-none"
           />
         </form>
       ) : (

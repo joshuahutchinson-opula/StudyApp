@@ -14,7 +14,7 @@ export function TabRail({
   const spring = useSpring();
 
   return (
-    <div className="flex flex-col gap-1 py-4">
+    <div className="flex flex-col gap-[var(--space-1)] py-[var(--space-4)]">
       {tabDividers.map((tab) => {
         const active = tab.id === activeTabId;
         return (
@@ -25,7 +25,7 @@ export function TabRail({
             whileTap={{ scale: 0.94 }}
             animate={{ x: active ? 4 : 0, backgroundColor: active ? tab.color : "rgba(0,0,0,0)" }}
             transition={spring.fast}
-            className="group flex items-center gap-2 rounded-r-[var(--radius-base)] py-2 pl-2 pr-3 text-left text-sm"
+            className="group flex items-center gap-[var(--space-2)] rounded-r-[var(--radius-sm)] py-[var(--space-2)] pl-[var(--space-2)] pr-[var(--space-3)] text-left text-sm"
             style={{ color: active ? "#fff" : "var(--color-text-muted)" }}
           >
             <span

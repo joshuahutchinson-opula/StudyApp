@@ -65,7 +65,7 @@ export function PageTurn({
             animate(dragX, 0, spring.base);
           }
         }}
-        className="relative min-h-[520px] cursor-grab select-none overflow-hidden rounded-[var(--radius-base)] bg-[var(--color-surface)] p-10 active:cursor-grabbing"
+        className="relative min-h-[520px] cursor-grab select-none overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-surface)] p-[var(--space-7)] active:cursor-grabbing"
         style={{
           x: dragX,
           rotateY,
@@ -76,12 +76,12 @@ export function PageTurn({
       >
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-24"
+          className="pointer-events-none absolute inset-y-0 left-0 w-[var(--space-8)]"
           style={{ background: "linear-gradient(90deg, black, transparent)", opacity: leftShadow }}
         />
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-24"
+          className="pointer-events-none absolute inset-y-0 right-0 w-[var(--space-8)]"
           style={{ background: "linear-gradient(270deg, black, transparent)", opacity: rightShadow }}
         />
         {children}
@@ -93,7 +93,7 @@ export function PageTurn({
           aria-label="Previous page"
           onClick={onPrev}
           whileTap={{ scale: 0.85, x: -3 }}
-          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-3 text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="absolute left-[var(--space-2)] top-1/2 -translate-y-1/2 rounded-full px-[var(--space-2)] py-[var(--space-3)] text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ‹
         </SpringButton>
@@ -104,7 +104,7 @@ export function PageTurn({
           aria-label="Next page"
           onClick={onNext}
           whileTap={{ scale: 0.85, x: 3 }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-3 text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          className="absolute right-[var(--space-2)] top-1/2 -translate-y-1/2 rounded-full px-[var(--space-2)] py-[var(--space-3)] text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ›
         </SpringButton>

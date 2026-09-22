@@ -14,7 +14,7 @@ export function ThumbnailStrip({
   const spring = useSpring();
 
   return (
-    <div className="flex gap-2 overflow-x-auto border-t border-[var(--color-border)] px-4 py-3">
+    <div className="flex gap-[var(--space-2)] overflow-x-auto border-t border-[var(--color-border)] px-[var(--space-4)] py-[var(--space-3)]">
       {pages.map((page, i) => {
         const active = page.id === currentPageId;
         return (
@@ -25,7 +25,7 @@ export function ThumbnailStrip({
             whileTap={{ scale: 0.9 }}
             animate={{ opacity: active ? 1 : 0.65, scale: active ? 1.08 : 1, y: active ? -2 : 0 }}
             transition={spring.fast}
-            className="flex h-14 w-11 shrink-0 flex-col justify-between rounded-sm p-1.5 text-left"
+            className="flex h-14 w-11 shrink-0 flex-col justify-between rounded-[var(--radius-sm)] p-[var(--space-1)] text-left"
             style={{
               background: "var(--color-surface)",
               border: `1.5px solid ${active ? "var(--color-accent)" : "var(--color-border)"}`,
