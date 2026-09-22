@@ -8,6 +8,7 @@ import { useSpring } from "./hooks/useSpring";
 import { useDisciplineStore } from "./store/useDisciplineStore";
 import { useAuthStore } from "./store/useAuthStore";
 import { LoginScreen } from "./features/auth/LoginScreen";
+import { MedicineHome } from "./features/home/MedicineHome";
 import { useBinders } from "./features/binder/api";
 import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
@@ -76,6 +77,7 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
 }
 
 type Mode =
+  | "home"
   | "binder"
   | "planner"
   | "review"
@@ -102,7 +104,7 @@ function Desk({
   const spring = useSpring();
   const { data: binders, isLoading } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
-  const [mode, setMode] = useState<Mode>("binder");
+  const [mode, setMode] = useState<Mode>(discipline === "medicine" ? "home" : "binder");
   const [binderTargetPageId, setBinderTargetPageId] = useState<string | undefined>(undefined);
 
   if (isLoading) {
@@ -110,11 +112,14 @@ function Desk({
   }
 
   // Signature features are discipline-specific, not part of the shared spine:
-  // "cases" (Medicine), "timeline" (Writing), "critique" (Arts).
+  // "cases" (Medicine), "timeline" (Writing), "critique" (Arts). "home" is a
+  // Medicine-only illustrated landing screen — no equivalent design exists
+  // for the other four disciplines yet.
   const baseTabs: Mode[] = ["binder", "planner", "graph", "search", "citations", "focus"];
   const signatureTab: Mode | null =
     discipline === "medicine" ? "cases" : discipline === "writing" ? "timeline" : discipline === "arts" ? "critique" : null;
   const navTabs: Mode[] = signatureTab ? [...baseTabs, signatureTab] : baseTabs;
+  if (discipline === "medicine") navTabs.unshift("home");
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -139,7 +144,9 @@ function Desk({
               fontWeight: mode === m ? 600 : 400,
             }}
           >
-            {m === "cases"
+            {m === "home"
+              ? "Home"
+              : m === "cases"
               ? "Clinical Cases"
               : m === "graph"
                 ? "Graph"
@@ -177,6 +184,14 @@ function Desk({
       </div>
 
       <div className="flex-1">
+        {mode === "home" && (
+          <MedicineHome
+            userId={userId}
+            onOpenBinder={() => setMode("binder")}
+            onOpenReview={() => setMode("review")}
+          />
+        )}
+
         {mode === "planner" && <PlannerView userId={userId} discipline={discipline} />}
 
         {mode === "review" && (
