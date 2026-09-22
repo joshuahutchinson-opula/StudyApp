@@ -1,11 +1,14 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { binderRoutes } from "./routes/binders.js";
 
 const app = Fastify({ logger: true });
 
 await app.register(cors, { origin: true });
 
 app.get("/health", async () => ({ status: "ok" }));
+
+await app.register(binderRoutes);
 
 const port = Number(process.env.PORT ?? 4000);
 

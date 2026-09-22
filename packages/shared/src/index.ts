@@ -6,3 +6,4 @@ export * from "./tasks.js";
 export * from "./study.js";
 export * from "./graph.js";
 export * from "./citation.js";
+export * from "./demo.js";

@@ -1,7 +1,9 @@
 import { useEffect } from "react";
-import { DISCIPLINES, type Discipline } from "@the-desk/shared";
+import { DEMO_USER_ID, DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
 import { useDisciplineStore } from "./store/useDisciplineStore";
+import { useBinders } from "./features/binder/api";
+import { BinderView } from "./features/binder/BinderView";
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   return (
@@ -43,6 +45,17 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
 
 function Desk({ discipline }: { discipline: Discipline }) {
   const meta = DISCIPLINE_META[discipline];
+  const { data: binders, isLoading } = useBinders(DEMO_USER_ID);
+  const binder = binders?.find((b) => b.discipline === discipline);
+
+  if (isLoading) {
+    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
+  }
+
+  if (binder) {
+    return <BinderView binderId={binder.id} />;
+  }
+
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6">
       <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>
@@ -50,7 +63,7 @@ function Desk({ discipline }: { discipline: Discipline }) {
         {meta.tagline}
       </h1>
       <p className="mt-8 text-sm text-[var(--color-text-muted)]">
-        Binder, planner, and knowledge graph land here next.
+        No binder yet for this discipline — the Medicine binder is the only one built so far.
       </p>
     </div>
   );
