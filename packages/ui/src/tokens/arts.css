@@ -1,0 +1,18 @@
+/* Arts: the most expressive mode, looser grid, larger imagery. Objects on screen must stay functional, not decorative. */
+[data-discipline="arts"] {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  --color-bg: #f7f5f2;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-muted: #5c5c5c;
+  --color-primary: #1a1a1a;
+  --color-accent: #c1432c;
+  --color-border: #e0ddd6;
+
+  --radius-base: 10px;
+  --motion-duration-fast: 140ms;
+  --motion-duration-base: 260ms;
+  --motion-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

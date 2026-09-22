@@ -1,0 +1,18 @@
+/* Writing/Journalism/Literature: warm, editorial, paper-like. Cream/off-white, strong serif, generous line-height. */
+[data-discipline="writing"] {
+  --font-display: "Source Serif 4", Georgia, serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+
+  --color-bg: #faf6ef;
+  --color-surface: #fffdf8;
+  --color-text: #2b2621;
+  --color-text-muted: #6b6255;
+  --color-primary: #3d3226;
+  --color-accent: #a3512b;
+  --color-border: #e6dcc9;
+
+  --radius-base: 3px;
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 240ms;
+  --motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}

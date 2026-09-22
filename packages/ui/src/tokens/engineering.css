@@ -1,0 +1,19 @@
+/* Engineering: precise, blueprint-inspired. Cool grays/blues, sparing grid texture. */
+[data-discipline="engineering"] {
+  --font-display: "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-bg: #eef1f5;
+  --color-surface: #ffffff;
+  --color-text: #101a2b;
+  --color-text-muted: #4d5a70;
+  --color-primary: #14335e;
+  --color-accent: #2b6cb0;
+  --color-border: #ccd6e4;
+
+  --radius-base: 2px;
+  --motion-duration-fast: 100ms;
+  --motion-duration-base: 180ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0.2, 1);
+}

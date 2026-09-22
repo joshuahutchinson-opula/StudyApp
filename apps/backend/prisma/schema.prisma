@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Discipline {
+  medicine
+  software
+  writing
+  engineering
+  arts
+}
+
+enum MasteryLevel {
+  unfamiliar
+  learning
+  familiar
+  mastered
+}
+
+enum TaskStatus {
+  backlog
+  todo
+  in_progress
+  done
+}
+
+enum DeadlineSource {
+  manual
+  syllabus_import
+}
+
+enum StudyMode {
+  pomodoro
+  deep_work
+  free
+}
+
+enum GraphNodeKind {
+  note
+  task
+  source
+  flashcard
+}
+
+enum GraphEdgeKind {
+  cites
+  references
+  tags
+  ai_suggested
+}
+
+enum CitationStyle {
+  ama
+  ieee
+  mla
+  chicago
+}
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  displayName     String
+  activeDiscipline Discipline
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  binders          Binder[]
+  tasks            Task[]
+  deadlines        Deadline[]
+  studySessions    StudySession[]
+  cards            SpacedRepetitionCard[]
+  graphNodes       GraphNode[]
+  graphEdges       GraphEdge[]
+  citations        Citation[]
+}
+
+// A bound note collection: spine, cover, pages — not a scrolling document.
+model Binder {
+  id         String     @id @default(uuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discipline Discipline
+  title      String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  tabDividers TabDivider[]
+  pages       Page[]
+
+  @@index([userId])
+}
+
+// Color-coded tab on the edge of a binder for fast subject/unit switching.
+model TabDivider {
+  id       String @id @default(uuid())
+  binderId String
+  binder   Binder @relation(fields: [binderId], references: [id], onDelete: Cascade)
+  label    String
+  color    String
+  order    Int
+
+  pages Page[]
+
+  @@index([binderId])
+}
+
+model Page {
+  id           String       @id @default(uuid())
+  binderId     String
+  binder       Binder       @relation(fields: [binderId], references: [id], onDelete: Cascade)
+  tabDividerId String?
+  tabDivider   TabDivider?  @relation(fields: [tabDividerId], references: [id], onDelete: SetNull)
+  title        String
+  order        Int
+  // Array of Block (see @the-desk/shared BlockSchema), stored as JSONB.
+  content      Json         @default("[]")
+  masteryLevel MasteryLevel @default(unfamiliar)
+  reviewed     Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  annotations MarginAnnotation[]
+  cards       SpacedRepetitionCard[]
+
+  @@index([binderId])
+  @@index([tabDividerId])
+}
+
+model MarginAnnotation {
+  id            String   @id @default(uuid())
+  pageId        String
+  page          Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  anchorBlockId String
+  body          String
+  createdAt     DateTime @default(now())
+
+  @@index([pageId])
+}
+
+model Task {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discipline        Discipline
+  title             String
+  description       String?
+  status            TaskStatus  @default(todo)
+  parentTaskId      String?
+  parentTask        Task?       @relation("TaskDependencies", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  subtasks          Task[]      @relation("TaskDependencies")
+  dueAt             DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  deadlines Deadline[]
+
+  @@index([userId])
+  @@index([parentTaskId])
+}
+
+model Deadline {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  dueAt          DateTime
+  source         DeadlineSource @default(manual)
+  relatedTaskId  String?
+  relatedTask    Task?          @relation(fields: [relatedTaskId], references: [id], onDelete: SetNull)
+  recurrenceRule String?
+  createdAt      DateTime       @default(now())
+
+  @@index([userId])
+  @@index([relatedTaskId])
+}
+
+model StudySession {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode         StudyMode
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  focusMinutes Int       @default(0)
+
+  @@index([userId])
+}
+
+// Generalized spaced-repetition card powering flashcards, terminology drills, vocab, etc.
+model SpacedRepetitionCard {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourcePageId  String?
+  sourcePage    Page?        @relation(fields: [sourcePageId], references: [id], onDelete: SetNull)
+  front         String
+  back          String
+  masteryLevel  MasteryLevel @default(unfamiliar)
+  dueAt         DateTime     @default(now())
+  intervalDays  Float        @default(0)
+  easeFactor    Float        @default(2.5)
+  reviewCount   Int          @default(0)
+
+  @@index([userId])
+  @@index([sourcePageId])
+}
+
+// Thin pointer into the graph view; refId points at the underlying spine entity.
+model GraphNode {
+  id     String        @id @default(uuid())
+  userId String
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind   GraphNodeKind
+  refId  String
+  label  String
+
+  outgoingEdges GraphEdge[] @relation("SourceNode")
+  incomingEdges GraphEdge[] @relation("TargetNode")
+
+  @@index([userId])
+  @@index([refId])
+}
+
+model GraphEdge {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceNodeId String
+  sourceNode   GraphNode     @relation("SourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNodeId String
+  targetNode   GraphNode     @relation("TargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+  kind         GraphEdgeKind
+  createdAt    DateTime      @default(now())
+
+  @@index([userId])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+}
+
+model Citation {
+  id         String        @id @default(uuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  style      CitationStyle
+  sourceType String
+  title      String
+  authors    String[]
+  year       Int?
+  publisher  String?
+  url        String?
+  doi        String?
+  createdAt  DateTime      @default(now())
+
+  @@index([userId])
+}

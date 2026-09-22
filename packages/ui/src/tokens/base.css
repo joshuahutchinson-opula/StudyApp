@@ -1,0 +1,26 @@
+/*
+ * Shared token shape. Every discipline file overrides these under its own
+ * [data-discipline="..."] selector — this file only defines the fallback
+ * values used before a discipline is selected (onboarding) and the variable
+ * names every component may rely on.
+ */
+:root {
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-bg: #f4f4f5;
+  --color-surface: #ffffff;
+  --color-text: #18181b;
+  --color-text-muted: #52525b;
+  --color-primary: #27272a;
+  --color-accent: #3f3f46;
+  --color-border: #d4d4d8;
+
+  --radius-base: 8px;
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 220ms;
+  --motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --space-unit: 8px;
+}

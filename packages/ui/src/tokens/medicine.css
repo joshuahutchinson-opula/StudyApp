@@ -1,0 +1,18 @@
+/* Medicine: clean, clinical, trustworthy. Deep navy/teal, serif body, calm motion — no bounce. */
+[data-discipline="medicine"] {
+  --font-display: "Source Serif 4", Georgia, serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+
+  --color-bg: #f3f6f7;
+  --color-surface: #ffffff;
+  --color-text: #0f2027;
+  --color-text-muted: #4b5d63;
+  --color-primary: #0b3d4c;
+  --color-accent: #1f7a6c;
+  --color-border: #c9d6d9;
+
+  --radius-base: 6px;
+  --motion-duration-fast: 100ms;
+  --motion-duration-base: 200ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0.2, 1);
+}

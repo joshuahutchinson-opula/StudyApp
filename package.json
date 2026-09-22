@@ -1,0 +1,20 @@
+{
+  "name": "the-desk",
+  "private": true,
+  "version": "0.0.1",
+  "description": "The Desk — a discipline-native study platform",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:desktop": "pnpm --filter @the-desk/desktop dev",
+    "dev:tauri": "pnpm --filter @the-desk/desktop tauri dev",
+    "dev:backend": "pnpm --filter @the-desk/backend dev",
+    "build": "pnpm -r --if-present build",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "db:generate": "pnpm --filter @the-desk/backend db:generate",
+    "db:migrate": "pnpm --filter @the-desk/backend db:migrate"
+  }
+}
