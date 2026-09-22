@@ -19,6 +19,9 @@ function code(language: string, codeText: string, runnable = false) {
 function citationRef(citationId: string) {
   return { id: randomUUID(), kind: "citationRef" as const, citationId };
 }
+function formula(expression: string) {
+  return { id: randomUUID(), kind: "formula" as const, expression };
+}
 
 async function seedMedicine() {
   const existing = await db.binder.findFirst({
@@ -545,6 +548,8 @@ async function seedEngineering() {
         paragraph("For a rigid body at rest, the sum of forces and the sum of moments about any point must each equal zero."),
         list(false, ["ΣFx = 0", "ΣFy = 0", "ΣM = 0 (about any chosen point)"]),
         paragraph("For a simply supported beam with a point load, reactions are found by taking moments about one support to eliminate its reaction term first."),
+        paragraph("Live example — 10 kN point load, 4 m span, 1.5 m from the left support:"),
+        formula("P = 10 kN\nL = 4 m\na = 1.5 m\nR1 = P * (L - a) / L\nR2 = P * a / L"),
       ],
     },
   });
@@ -566,6 +571,10 @@ async function seedEngineering() {
           "Fracture point: where the material breaks",
         ]),
         paragraph("Working (allowable) stress is kept well below yield, using a safety factor set by the applicable code — not by engineering judgment alone."),
+        paragraph("Live example — axial stress from a 15 kN load on a 300 mm² cross-section:"),
+        formula("F = 15 kN\nA = 300 mm^2\nsigma = F / A\nsigma to MPa"),
+        paragraph("Unit-mismatch is flagged, not silently coerced — e.g. trying to add a force to a time:"),
+        formula("F = 15 kN\nt = 2 s\nF + t"),
       ],
     },
   });

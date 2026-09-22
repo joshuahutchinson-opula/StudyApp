@@ -40,6 +40,11 @@ export const BlockSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ id: z.string().uuid(), kind: z.literal("image"), url: z.string(), caption: z.string().optional() }),
   z.object({ id: z.string().uuid(), kind: z.literal("citationRef"), citationId: z.string().uuid() }),
+  // Engineering's signature feature: unit-aware, live-computed equations —
+  // a genuinely different content shape from a code block (multi-line
+  // expression evaluated as math, not executed as a program), not an
+  // additive flag like code's `runnable`.
+  z.object({ id: z.string().uuid(), kind: z.literal("formula"), expression: z.string() }),
 ]);
 export type Block = z.infer<typeof BlockSchema>;
 

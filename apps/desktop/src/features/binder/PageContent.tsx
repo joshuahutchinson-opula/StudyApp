@@ -1,7 +1,12 @@
+import { lazy, Suspense } from "react";
 import type { Block, MarginAnnotation } from "@the-desk/shared";
 import { RunnableCode } from "./RunnableCode";
 import type { CitationWithFormatted } from "../citations/types";
 import { MarginNote } from "./MarginNote";
+
+// mathjs is a large dependency — code-split so it's only fetched on pages
+// that actually contain a formula block (Engineering), not on every page load.
+const FormulaBlock = lazy(() => import("./FormulaBlock").then((m) => ({ default: m.FormulaBlock })));
 
 function renderBlock(block: Block, citations: CitationWithFormatted[]) {
   switch (block.kind) {
@@ -56,6 +61,12 @@ function renderBlock(block: Block, citations: CitationWithFormatted[]) {
         </p>
       );
     }
+    case "formula":
+      return (
+        <Suspense fallback={<p className="text-sm text-[var(--color-text-muted)]">Loading calculator…</p>}>
+          <FormulaBlock expression={block.expression} />
+        </Suspense>
+      );
     default:
       return null;
   }
