@@ -76,6 +76,7 @@ model User {
   cards            SpacedRepetitionCard[]
   graphNodes       GraphNode[]
   graphEdges       GraphEdge[]
+  caseAttempts     CaseAttempt[]
   citations        Citation[]
 }
 
@@ -257,4 +258,37 @@ model Citation {
   createdAt  DateTime      @default(now())
 
   @@index([userId])
+}
+
+// Medicine's signature feature: a case vignette the student builds a
+// differential and orders tests against, then gets rubric-based feedback.
+// Engine-specific (not part of the shared spine), unlike SpacedRepetitionCard.
+model ClinicalCase {
+  id                  String   @id @default(uuid())
+  title               String
+  vignette            String
+  // DifferentialOption[]: [{ label: string, weight: "primary"|"reasonable"|"unlikely" }]
+  differentialOptions Json
+  // TestOption[]: [{ label: string, indicated: boolean }]
+  testOptions         Json
+  createdAt           DateTime @default(now())
+
+  attempts CaseAttempt[]
+}
+
+model CaseAttempt {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  caseId       String
+  case         ClinicalCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  differential String[]
+  orderedTests String[]
+  score        Float
+  // CaseFeedback: see backend src/rubric.ts for the shape
+  feedback     Json
+  createdAt    DateTime     @default(now())
+
+  @@index([userId])
+  @@index([caseId])
 }

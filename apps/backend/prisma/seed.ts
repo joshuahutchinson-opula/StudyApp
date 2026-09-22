@@ -183,6 +183,31 @@ async function main() {
     ],
   });
 
+  await db.clinicalCase.create({
+    data: {
+      title: "Progressive dyspnea in a 68-year-old",
+      vignette:
+        "A 68-year-old man with a history of hypertension and prior MI presents with 2 weeks of worsening shortness of breath on exertion, orthopnea (now sleeping on 3 pillows), and bilateral ankle swelling. He denies fever or cough. Vitals: BP 148/92, HR 98, RR 22, SpO2 91% on room air. Exam: elevated JVP, bibasilar crackles, 2+ pitting edema to the shins, no murmurs.",
+      differentialOptions: [
+        { label: "Acute decompensated heart failure", weight: "primary" },
+        { label: "COPD exacerbation", weight: "reasonable" },
+        { label: "Pulmonary embolism", weight: "reasonable" },
+        { label: "Community-acquired pneumonia", weight: "unlikely" },
+        { label: "Anemia", weight: "unlikely" },
+      ] satisfies { label: string; weight: "primary" | "reasonable" | "unlikely" }[],
+      testOptions: [
+        { label: "BNP or NT-proBNP", indicated: true },
+        { label: "Transthoracic echocardiogram", indicated: true },
+        { label: "Chest X-ray", indicated: true },
+        { label: "ECG", indicated: true },
+        { label: "Basic metabolic panel", indicated: true },
+        { label: "D-dimer", indicated: false },
+        { label: "CT pulmonary angiogram", indicated: false },
+        { label: "Sputum culture", indicated: false },
+      ] satisfies { label: string; indicated: boolean }[],
+    },
+  });
+
   console.log(`Seeded demo Medicine binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 

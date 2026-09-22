@@ -6,6 +6,7 @@ import { useBinders } from "./features/binder/api";
 import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
 import { PlannerView } from "./features/planner/PlannerView";
+import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   return (
@@ -45,7 +46,7 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode = "binder" | "planner" | "review";
+type Mode = "binder" | "planner" | "review" | "cases";
 
 function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
@@ -57,6 +58,10 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
   }
 
+  // "cases" (clinical reasoning simulator) is a Medicine-only signature feature,
+  // not part of the shared spine — other disciplines get their own such features later.
+  const navTabs: Mode[] = discipline === "medicine" ? ["binder", "planner", "cases"] : ["binder", "planner"];
+
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex items-center gap-5 border-b border-[var(--color-border)] px-4 py-2 text-sm">
@@ -64,7 +69,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
           The Desk
         </button>
         <span className="text-[var(--color-border)]">/</span>
-        {(["binder", "planner"] as const).map((m) => (
+        {navTabs.map((m) => (
           <button
             key={m}
             type="button"
@@ -75,7 +80,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
               fontWeight: mode === m ? 600 : 400,
             }}
           >
-            {m}
+            {m === "cases" ? "Clinical Cases" : m}
           </button>
         ))}
       </div>
@@ -84,6 +89,8 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
         {mode === "planner" && <PlannerView userId={DEMO_USER_ID} discipline={discipline} />}
 
         {mode === "review" && <ReviewSession userId={DEMO_USER_ID} onExit={() => setMode("binder")} />}
+
+        {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
 
         {mode === "binder" &&
           (binder ? (

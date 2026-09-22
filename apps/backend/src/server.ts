@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { binderRoutes } from "./routes/binders.js";
 import { cardRoutes } from "./routes/cards.js";
 import { taskRoutes } from "./routes/tasks.js";
+import { caseRoutes } from "./routes/cases.js";
 
 const app = Fastify({ logger: true });
 
@@ -13,6 +14,7 @@ app.get("/health", async () => ({ status: "ok" }));
 await app.register(binderRoutes);
 await app.register(cardRoutes);
 await app.register(taskRoutes);
+await app.register(caseRoutes);
 
 const port = Number(process.env.PORT ?? 4000);
 
