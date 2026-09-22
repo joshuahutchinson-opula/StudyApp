@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
-import { useAddAnnotation, useBinder, useCreatePage, useUpdatePage } from "./api";
+import { useAddAnnotation, useBinder, useCreatePage, useUpdatePage, useUpdatePageContent } from "./api";
 import { useDueCards } from "../review/api";
 import { useCitations } from "../citations/api";
 import { PageTurn } from "./PageTurn";
@@ -27,6 +27,7 @@ export function BinderView({
   const updatePage = useUpdatePage(binderId);
   const addAnnotation = useAddAnnotation(binderId);
   const createPage = useCreatePage(binderId);
+  const updateContent = useUpdatePageContent(binderId);
   const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
   const { data: citations } = useCitations(DEMO_USER_ID, discipline);
   const [index, setIndex] = useState(0);
@@ -156,6 +157,14 @@ export function BinderView({
                 onAddAnnotation={(anchorBlockId, body) =>
                   addAnnotation.mutate({ pageId: currentPage.id, anchorBlockId, body })
                 }
+                onEditText={(blockId, text) => {
+                  const nextContent = currentPage.content.map((block) =>
+                    block.id === blockId && (block.kind === "heading" || block.kind === "paragraph")
+                      ? { ...block, text }
+                      : block,
+                  );
+                  updateContent.mutate({ pageId: currentPage.id, content: nextContent });
+                }}
               />
             </div>
           ) : null}

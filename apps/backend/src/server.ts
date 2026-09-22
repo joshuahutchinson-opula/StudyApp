@@ -8,6 +8,7 @@ import { graphRoutes } from "./routes/graph.js";
 import { citationRoutes } from "./routes/citations.js";
 import { studySessionRoutes } from "./routes/studySessions.js";
 import { searchRoutes } from "./routes/search.js";
+import { pageRevisionRoutes } from "./routes/pageRevisions.js";
 
 const app = Fastify({ logger: true });
 
@@ -23,6 +24,7 @@ await app.register(graphRoutes);
 await app.register(citationRoutes);
 await app.register(studySessionRoutes);
 await app.register(searchRoutes);
+await app.register(pageRevisionRoutes);
 
 const port = Number(process.env.PORT ?? 4000);
 

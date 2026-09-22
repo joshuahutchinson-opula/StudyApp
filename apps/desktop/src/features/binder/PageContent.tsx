@@ -3,22 +3,49 @@ import type { Block, MarginAnnotation } from "@the-desk/shared";
 import { RunnableCode } from "./RunnableCode";
 import type { CitationWithFormatted } from "../citations/types";
 import { MarginNote } from "./MarginNote";
+import { EditableText } from "./EditableText";
 
 // mathjs is a large dependency — code-split so it's only fetched on pages
 // that actually contain a formula block (Engineering), not on every page load.
 const FormulaBlock = lazy(() => import("./FormulaBlock").then((m) => ({ default: m.FormulaBlock })));
 
-function renderBlock(block: Block, citations: CitationWithFormatted[]) {
+function renderBlock(
+  block: Block,
+  citations: CitationWithFormatted[],
+  onEditText?: (blockId: string, text: string) => void,
+) {
   switch (block.kind) {
     case "heading": {
       const sizes = { 1: "text-2xl", 2: "text-xl", 3: "text-lg" } as const;
       const className = sizes[block.level as 1 | 2 | 3];
       const style = { fontFamily: "var(--font-display)" };
-      if (block.level === 1) return <h1 className={className} style={style}>{block.text}</h1>;
-      if (block.level === 2) return <h2 className={className} style={style}>{block.text}</h2>;
-      return <h3 className={className} style={style}>{block.text}</h3>;
+      const tag = block.level === 1 ? "h1" : block.level === 2 ? "h2" : "h3";
+      if (onEditText) {
+        return (
+          <EditableText
+            as={tag}
+            value={block.text}
+            onSave={(text) => onEditText(block.id, text)}
+            className={className}
+            style={style}
+          />
+        );
+      }
+      const Tag = tag;
+      return <Tag className={className} style={style}>{block.text}</Tag>;
     }
     case "paragraph":
+      if (onEditText) {
+        return (
+          <EditableText
+            as="p"
+            value={block.text}
+            onSave={(text) => onEditText(block.id, text)}
+            multiline
+            className="leading-relaxed text-[var(--color-text)]"
+          />
+        );
+      }
       return <p className="leading-relaxed text-[var(--color-text)]">{block.text}</p>;
     case "list": {
       const ListTag = block.ordered ? "ol" : "ul";
@@ -77,17 +104,19 @@ export function PageContent({
   citations = [],
   annotations = [],
   onAddAnnotation,
+  onEditText,
 }: {
   blocks: Block[];
   citations?: CitationWithFormatted[];
   annotations?: MarginAnnotation[];
   onAddAnnotation?: (blockId: string, body: string) => void;
+  onEditText?: (blockId: string, text: string) => void;
 }) {
   return (
     <div className="grid gap-x-6 gap-y-4" style={{ gridTemplateColumns: "1fr 180px" }}>
       {blocks.map((block) => (
         <div key={block.id} className="contents">
-          <div>{renderBlock(block, citations)}</div>
+          <div>{renderBlock(block, citations, onEditText)}</div>
           <div>
             {onAddAnnotation && (
               <MarginNote

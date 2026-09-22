@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { MasteryLevelSchema } from "@the-desk/shared";
+import { MasteryLevelSchema, BlockSchema } from "@the-desk/shared";
 import { db } from "../db.js";
 
 // createdAt as tiebreaker keeps ordering deterministic if two pages ever share `order`.
@@ -102,5 +102,30 @@ export async function binderRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send(params.error.flatten());
     await db.marginAnnotation.delete({ where: { id: params.data.id } });
     return { ok: true };
+  });
+
+  const UpdateContentBody = z.object({ content: z.array(BlockSchema) });
+
+  // A revision snapshot of the PRE-edit content is taken before every save —
+  // this is what makes the manuscript timeline "just work" from normal
+  // editing, with no separate "save a version" step for the student to
+  // remember. Powers Writing's signature feature (see routes/pageRevisions).
+  app.patch("/pages/:id/content", async (req, reply) => {
+    const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send(params.error.flatten());
+    const body = UpdateContentBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send(body.error.flatten());
+
+    const existing = await db.page.findUnique({ where: { id: params.data.id } });
+    if (!existing) return reply.code(404).send({ error: "Page not found" });
+
+    await db.pageRevision.create({
+      data: { pageId: existing.id, content: existing.content as Prisma.InputJsonValue },
+    });
+
+    return db.page.update({
+      where: { id: params.data.id },
+      data: { content: body.data.content as unknown as Prisma.InputJsonValue },
+    });
   });
 }

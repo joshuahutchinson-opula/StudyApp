@@ -10,6 +10,7 @@ import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
 import { CitationLibrary } from "./features/citations/CitationLibrary";
 import { FocusTimer } from "./features/focus/FocusTimer";
 import { SearchView } from "./features/search/SearchView";
+import { ManuscriptTimeline } from "./features/manuscript/ManuscriptTimeline";
 
 // Cytoscape is a large dependency — code-split so it's only fetched when a
 // student actually opens the graph tab, not on every app load.
@@ -53,7 +54,7 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode = "binder" | "planner" | "review" | "cases" | "graph" | "citations" | "focus" | "search";
+type Mode = "binder" | "planner" | "review" | "cases" | "graph" | "citations" | "focus" | "search" | "timeline";
 
 function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
@@ -66,12 +67,15 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
   }
 
-  // "cases" (clinical reasoning simulator) is a Medicine-only signature feature,
-  // not part of the shared spine — other disciplines get their own such features later.
+  // Signature features are discipline-specific, not part of the shared spine:
+  // "cases" (Medicine), "timeline" (Writing). Others get their own later.
+  const baseTabs: Mode[] = ["binder", "planner", "graph", "search", "citations", "focus"];
   const navTabs: Mode[] =
     discipline === "medicine"
-      ? ["binder", "planner", "graph", "search", "citations", "focus", "cases"]
-      : ["binder", "planner", "graph", "search", "citations", "focus"];
+      ? [...baseTabs, "cases"]
+      : discipline === "writing"
+        ? [...baseTabs, "timeline"]
+        : baseTabs;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -101,7 +105,9 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
                     ? "Focus"
                     : m === "search"
                       ? "Search"
-                      : m}
+                      : m === "timeline"
+                        ? "Timeline"
+                        : m}
           </button>
         ))}
       </div>
@@ -114,6 +120,8 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
         )}
 
         {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
+
+        {mode === "timeline" && binder && <ManuscriptTimeline binderId={binder.id} />}
 
         {mode === "citations" && <CitationLibrary userId={DEMO_USER_ID} discipline={discipline} />}
 

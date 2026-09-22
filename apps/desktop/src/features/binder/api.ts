@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Binder, MasteryLevel } from "@the-desk/shared";
+import type { Binder, Block, MasteryLevel } from "@the-desk/shared";
 import { api } from "../../api/client";
 import type { BinderDetail } from "./types";
 
@@ -42,6 +42,18 @@ export function useCreatePage(binderId: string) {
       api.post(`/binders/${binderId}/pages`, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["binder", binderId] });
+    },
+  });
+}
+
+export function useUpdatePageContent(binderId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pageId, content }: { pageId: string; content: Block[] }) =>
+      api.patch(`/pages/${pageId}/content`, { content }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["binder", binderId] });
+      void queryClient.invalidateQueries({ queryKey: ["page-revisions"] });
     },
   });
 }

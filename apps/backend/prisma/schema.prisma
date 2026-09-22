@@ -127,6 +127,7 @@ model Page {
 
   annotations MarginAnnotation[]
   cards       SpacedRepetitionCard[]
+  revisions   PageRevision[]
 
   @@index([binderId])
   @@index([tabDividerId])
@@ -139,6 +140,20 @@ model MarginAnnotation {
   anchorBlockId String
   body          String
   createdAt     DateTime @default(now())
+
+  @@index([pageId])
+}
+
+// Writing's signature feature: a git-history-like manuscript timeline with
+// rewind. A snapshot of `content` is taken automatically before every edit
+// (see PATCH /pages/:id/content), so history requires no manual "save
+// version" step — editing itself is what populates the timeline.
+model PageRevision {
+  id        String   @id @default(uuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  content   Json
+  createdAt DateTime @default(now())
 
   @@index([pageId])
 }
