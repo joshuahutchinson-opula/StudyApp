@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
+import type { Discipline } from "@the-desk/shared";
 import {
   useAddAnnotation,
   useBinder,
@@ -22,11 +22,13 @@ import { MasteryControl, DogEar } from "./MasteryControl";
 type DisplayItem = { type: "toc" } | { type: "page"; pageId: string };
 
 export function BinderView({
+  userId,
   binderId,
   discipline,
   initialPageId,
   onOpenReview,
 }: {
+  userId: string;
   binderId: string;
   discipline: Discipline;
   /** Jump straight to this page on mount — e.g. arriving from a graph node click. */
@@ -39,8 +41,8 @@ export function BinderView({
   const createPage = useCreatePage(binderId);
   const reorderPages = useReorderPages(binderId);
   const updateContent = useUpdatePageContent(binderId);
-  const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
-  const { data: citations } = useCitations(DEMO_USER_ID, discipline);
+  const { data: dueCards } = useDueCards(userId, discipline);
+  const { data: citations } = useCitations(userId, discipline);
   const [index, setIndex] = useState(0);
   const [navDirection, setNavDirection] = useState<1 | -1 | 0>(0);
 

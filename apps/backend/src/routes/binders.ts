@@ -3,17 +3,15 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { MasteryLevelSchema, BlockSchema } from "@the-desk/shared";
 import { db } from "../db.js";
+import { binderBelongsToUser, pageBelongsToUser } from "../ownership.js";
 
 // createdAt as tiebreaker keeps ordering deterministic if two pages ever share `order`.
 const pageOrderBy: Prisma.PageOrderByWithRelationInput[] = [{ order: "asc" }, { createdAt: "asc" }];
 
 export async function binderRoutes(app: FastifyInstance) {
-  app.get("/binders", async (req, reply) => {
-    const query = z.object({ userId: z.string().uuid() }).safeParse(req.query);
-    if (!query.success) return reply.code(400).send(query.error.flatten());
-
+  app.get("/binders", async (req) => {
     return db.binder.findMany({
-      where: { userId: query.data.userId },
+      where: { userId: req.userId! },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -30,6 +28,7 @@ export async function binderRoutes(app: FastifyInstance) {
       },
     });
     if (!binder) return reply.code(404).send({ error: "Binder not found" });
+    if (binder.userId !== req.userId) return reply.code(404).send({ error: "Binder not found" });
     return binder;
   });
 
@@ -43,6 +42,9 @@ export async function binderRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send(params.error.flatten());
     const body = CreatePageBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
+    if (!(await binderBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Binder not found" });
+    }
 
     const lastPage = await db.page.findFirst({
       where: { binderId: params.data.id },
@@ -70,6 +72,9 @@ export async function binderRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send(params.error.flatten());
     const body = UpdatePageBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
+    if (!(await pageBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Page not found" });
+    }
 
     const data: Prisma.PageUpdateInput = {};
     if (body.data.masteryLevel !== undefined) data.masteryLevel = body.data.masteryLevel;
@@ -91,6 +96,9 @@ export async function binderRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send(params.error.flatten());
     const body = CreateAnnotationBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
+    if (!(await pageBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Page not found" });
+    }
 
     return db.marginAnnotation.create({
       data: { pageId: params.data.id, anchorBlockId: body.data.anchorBlockId, body: body.data.body },
@@ -100,6 +108,12 @@ export async function binderRoutes(app: FastifyInstance) {
   app.delete("/annotations/:id", async (req, reply) => {
     const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
     if (!params.success) return reply.code(400).send(params.error.flatten());
+
+    const annotation = await db.marginAnnotation.findUnique({ where: { id: params.data.id } });
+    if (!annotation || !(await pageBelongsToUser(annotation.pageId, req.userId!))) {
+      return reply.code(404).send({ error: "Annotation not found" });
+    }
+
     await db.marginAnnotation.delete({ where: { id: params.data.id } });
     return { ok: true };
   });
@@ -117,6 +131,9 @@ export async function binderRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send(params.error.flatten());
     const body = ReorderPagesBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
+    if (!(await binderBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Binder not found" });
+    }
 
     const binderPages = await db.page.findMany({ where: { binderId: params.data.id }, select: { id: true } });
     const binderPageIds = new Set(binderPages.map((p) => p.id));
@@ -146,8 +163,9 @@ export async function binderRoutes(app: FastifyInstance) {
     const body = UpdateContentBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
 
-    const existing = await db.page.findUnique({ where: { id: params.data.id } });
+    const existing = await db.page.findUnique({ where: { id: params.data.id }, include: { binder: true } });
     if (!existing) return reply.code(404).send({ error: "Page not found" });
+    if (existing.binder.userId !== req.userId) return reply.code(404).send({ error: "Page not found" });
 
     await db.pageRevision.create({
       data: { pageId: existing.id, content: existing.content as Prisma.InputJsonValue },

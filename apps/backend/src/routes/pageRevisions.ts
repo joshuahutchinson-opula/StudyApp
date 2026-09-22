@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "../db.js";
+import { pageBelongsToUser } from "../ownership.js";
 
 // Writing's signature feature: a git-history-like manuscript timeline. See
 // PATCH /pages/:id/content (routes/binders.ts) for where revisions get created.
@@ -9,6 +10,9 @@ export async function pageRevisionRoutes(app: FastifyInstance) {
   app.get("/pages/:id/revisions", async (req, reply) => {
     const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
     if (!params.success) return reply.code(400).send(params.error.flatten());
+    if (!(await pageBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Page not found" });
+    }
 
     return db.pageRevision.findMany({
       where: { pageId: params.data.id },
@@ -21,6 +25,9 @@ export async function pageRevisionRoutes(app: FastifyInstance) {
       .object({ id: z.string().uuid(), revisionId: z.string().uuid() })
       .safeParse(req.params);
     if (!params.success) return reply.code(400).send(params.error.flatten());
+    if (!(await pageBelongsToUser(params.data.id, req.userId!))) {
+      return reply.code(404).send({ error: "Page not found" });
+    }
 
     const revision = await db.pageRevision.findUnique({ where: { id: params.data.revisionId } });
     if (!revision || revision.pageId !== params.data.id) {

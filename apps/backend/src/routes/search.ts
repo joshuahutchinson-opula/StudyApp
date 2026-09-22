@@ -41,10 +41,11 @@ function snippetAround(text: string, query: string, radius = 60): string {
 export async function searchRoutes(app: FastifyInstance) {
   app.get("/search", async (req, reply) => {
     const query = z
-      .object({ userId: z.string().uuid(), discipline: DisciplineSchema, q: z.string().min(1) })
+      .object({ discipline: DisciplineSchema, q: z.string().min(1) })
       .safeParse(req.query);
     if (!query.success) return reply.code(400).send(query.error.flatten());
-    const { userId, discipline, q } = query.data;
+    const userId = req.userId!;
+    const { discipline, q } = query.data;
     const needle = q.toLowerCase();
 
     const results: SearchResult[] = [];

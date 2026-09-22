@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { DEMO_USER_ID, DISCIPLINES, type Discipline } from "@the-desk/shared";
+import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
 import { useDisciplineStore } from "./store/useDisciplineStore";
+import { useAuthStore } from "./store/useAuthStore";
+import { LoginScreen } from "./features/auth/LoginScreen";
 import { useBinders } from "./features/binder/api";
 import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
@@ -67,9 +69,19 @@ type Mode =
   | "timeline"
   | "critique";
 
-function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
+function Desk({
+  userId,
+  discipline,
+  onSwitchDiscipline,
+  onLogOut,
+}: {
+  userId: string;
+  discipline: Discipline;
+  onSwitchDiscipline: () => void;
+  onLogOut: () => void;
+}) {
   const meta = DISCIPLINE_META[discipline];
-  const { data: binders, isLoading } = useBinders(DEMO_USER_ID);
+  const { data: binders, isLoading } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
   const [mode, setMode] = useState<Mode>("binder");
   const [binderTargetPageId, setBinderTargetPageId] = useState<string | undefined>(undefined);
@@ -120,31 +132,38 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
                           : m}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={onLogOut}
+          className="ml-auto text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
+          Log out
+        </button>
       </div>
 
       <div className="flex-1">
-        {mode === "planner" && <PlannerView userId={DEMO_USER_ID} discipline={discipline} />}
+        {mode === "planner" && <PlannerView userId={userId} discipline={discipline} />}
 
         {mode === "review" && (
-          <ReviewSession userId={DEMO_USER_ID} discipline={discipline} onExit={() => setMode("binder")} />
+          <ReviewSession userId={userId} discipline={discipline} onExit={() => setMode("binder")} />
         )}
 
-        {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
+        {mode === "cases" && <ClinicalCaseSim userId={userId} />}
 
         {mode === "timeline" && binder && <ManuscriptTimeline binderId={binder.id} />}
 
         {mode === "critique" && binder && <CritiqueRoom binderId={binder.id} />}
 
-        {mode === "citations" && <CitationLibrary userId={DEMO_USER_ID} discipline={discipline} />}
+        {mode === "citations" && <CitationLibrary userId={userId} discipline={discipline} />}
 
-        {mode === "focus" && <FocusTimer userId={DEMO_USER_ID} />}
+        {mode === "focus" && <FocusTimer userId={userId} />}
 
         {mode === "graph" && (
           <Suspense
             fallback={<div className="p-10 text-sm text-[var(--color-text-muted)]">Loading graph…</div>}
           >
             <GraphView
-              userId={DEMO_USER_ID}
+              userId={userId}
               discipline={discipline}
               onOpenNote={(pageId) => {
                 setBinderTargetPageId(pageId);
@@ -156,7 +175,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
 
         {mode === "search" && (
           <SearchView
-            userId={DEMO_USER_ID}
+            userId={userId}
             discipline={discipline}
             onOpenPage={(pageId) => {
               setBinderTargetPageId(pageId);
@@ -169,6 +188,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
           (binder ? (
             <BinderView
               key={binderTargetPageId ?? "default"}
+              userId={userId}
               binderId={binder.id}
               discipline={discipline}
               initialPageId={binderTargetPageId}
@@ -191,6 +211,9 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
 }
 
 export default function App() {
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const logOut = useAuthStore((s) => s.logOut);
   const activeDiscipline = useDisciplineStore((s) => s.activeDiscipline);
   const setDiscipline = useDisciplineStore((s) => s.setDiscipline);
 
@@ -202,14 +225,28 @@ export default function App() {
     }
   }, [activeDiscipline]);
 
+  // Skip the picker right after login/register — land directly in the
+  // discipline the account was created with, but only as a one-time default;
+  // switching away afterward is a normal, freely reversible UI choice, not
+  // tied back to the account record.
+  useEffect(() => {
+    if (user && !activeDiscipline) setDiscipline(user.activeDiscipline);
+  }, [user, activeDiscipline, setDiscipline]);
+
+  if (!token || !user) {
+    return <LoginScreen />;
+  }
+
   if (!activeDiscipline) {
     return <DisciplinePicker onSelect={setDiscipline} />;
   }
 
   return (
     <Desk
+      userId={user.id}
       discipline={activeDiscipline}
       onSwitchDiscipline={() => useDisciplineStore.setState({ activeDiscipline: null })}
+      onLogOut={logOut}
     />
   );
 }

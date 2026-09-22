@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { DEMO_USER_ID } from "@the-desk/shared";
 
 const db = new PrismaClient();
+export const DEMO_PASSWORD = "StudyDesk123!";
 
 function heading(level: 1 | 2 | 3, text: string) {
   return { id: randomUUID(), kind: "heading" as const, level, text };
@@ -801,6 +803,7 @@ async function main() {
     create: {
       id: DEMO_USER_ID,
       email: "demo@thedesk.app",
+      passwordHash: await bcrypt.hash(DEMO_PASSWORD, 10),
       displayName: "Demo Student",
       activeDiscipline: "medicine",
     },

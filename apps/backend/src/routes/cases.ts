@@ -31,7 +31,6 @@ export async function caseRoutes(app: FastifyInstance) {
   });
 
   const AttemptBody = z.object({
-    userId: z.string().uuid(),
     differential: z.array(z.string().min(1)),
     orderedTests: z.array(z.string()),
   });
@@ -54,7 +53,7 @@ export async function caseRoutes(app: FastifyInstance) {
 
     return db.caseAttempt.create({
       data: {
-        userId: body.data.userId,
+        userId: req.userId!,
         caseId: clinicalCase.id,
         differential: body.data.differential,
         orderedTests: body.data.orderedTests,

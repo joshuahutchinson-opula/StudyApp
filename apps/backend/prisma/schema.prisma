@@ -58,6 +58,7 @@ enum CitationStyle {
 model User {
   id              String     @id @default(uuid())
   email           String     @unique
+  passwordHash    String
   displayName     String
   activeDiscipline Discipline
   createdAt       DateTime   @default(now())

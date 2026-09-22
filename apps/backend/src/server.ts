@@ -1,5 +1,8 @@
+import "./loadEnv.js";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { registerAuthHook } from "./authHook.js";
+import { authRoutes } from "./routes/auth.js";
 import { binderRoutes } from "./routes/binders.js";
 import { cardRoutes } from "./routes/cards.js";
 import { taskRoutes } from "./routes/tasks.js";
@@ -17,6 +20,9 @@ await app.register(cors, { origin: true });
 
 app.get("/health", async () => ({ status: "ok" }));
 
+registerAuthHook(app);
+
+await app.register(authRoutes);
 await app.register(binderRoutes);
 await app.register(cardRoutes);
 await app.register(taskRoutes);

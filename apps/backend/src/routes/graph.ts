@@ -27,11 +27,10 @@ export interface GraphEdgeDto {
 // GraphEdge model.
 export async function graphRoutes(app: FastifyInstance) {
   app.get("/graph", async (req, reply) => {
-    const query = z
-      .object({ userId: z.string().uuid(), discipline: DisciplineSchema })
-      .safeParse(req.query);
+    const query = z.object({ discipline: DisciplineSchema }).safeParse(req.query);
     if (!query.success) return reply.code(400).send(query.error.flatten());
-    const { userId, discipline } = query.data;
+    const userId = req.userId!;
+    const { discipline } = query.data;
 
     const binders = await db.binder.findMany({
       where: { userId, discipline },
@@ -98,7 +97,6 @@ export async function graphRoutes(app: FastifyInstance) {
   });
 
   const CreateEdgeBody = z.object({
-    userId: z.string().uuid(),
     discipline: DisciplineSchema,
     sourceRef: z.string().min(1),
     targetRef: z.string().min(1),
@@ -110,7 +108,7 @@ export async function graphRoutes(app: FastifyInstance) {
 
     return db.graphEdge.create({
       data: {
-        userId: body.data.userId,
+        userId: req.userId!,
         discipline: body.data.discipline,
         sourceRef: body.data.sourceRef,
         targetRef: body.data.targetRef,
@@ -122,6 +120,10 @@ export async function graphRoutes(app: FastifyInstance) {
   app.delete("/graph/edges/:id", async (req, reply) => {
     const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
     if (!params.success) return reply.code(400).send(params.error.flatten());
+
+    const edge = await db.graphEdge.findUnique({ where: { id: params.data.id } });
+    if (!edge || edge.userId !== req.userId) return reply.code(404).send({ error: "Edge not found" });
+
     await db.graphEdge.delete({ where: { id: params.data.id } });
     return { ok: true };
   });

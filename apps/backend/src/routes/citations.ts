@@ -6,13 +6,11 @@ import { formatCitation } from "../citationFormat.js";
 
 export async function citationRoutes(app: FastifyInstance) {
   app.get("/citations", async (req, reply) => {
-    const query = z
-      .object({ userId: z.string().uuid(), discipline: DisciplineSchema })
-      .safeParse(req.query);
+    const query = z.object({ discipline: DisciplineSchema }).safeParse(req.query);
     if (!query.success) return reply.code(400).send(query.error.flatten());
 
     const citations = await db.citation.findMany({
-      where: { userId: query.data.userId, discipline: query.data.discipline },
+      where: { userId: req.userId!, discipline: query.data.discipline },
       orderBy: { createdAt: "desc" },
     });
 
@@ -20,7 +18,6 @@ export async function citationRoutes(app: FastifyInstance) {
   });
 
   const CreateCitationBody = z.object({
-    userId: z.string().uuid(),
     discipline: DisciplineSchema,
     sourceType: z.enum(["article", "book", "website", "conference_paper", "other"]),
     title: z.string().min(1),
@@ -37,7 +34,7 @@ export async function citationRoutes(app: FastifyInstance) {
 
     const citation = await db.citation.create({
       data: {
-        userId: body.data.userId,
+        userId: req.userId!,
         discipline: body.data.discipline,
         style: DISCIPLINE_DEFAULT_CITATION_STYLE[body.data.discipline],
         sourceType: body.data.sourceType,
@@ -56,6 +53,12 @@ export async function citationRoutes(app: FastifyInstance) {
   app.delete("/citations/:id", async (req, reply) => {
     const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
     if (!params.success) return reply.code(400).send(params.error.flatten());
+
+    const citation = await db.citation.findUnique({ where: { id: params.data.id } });
+    if (!citation || citation.userId !== req.userId) {
+      return reply.code(404).send({ error: "Citation not found" });
+    }
+
     await db.citation.delete({ where: { id: params.data.id } });
     return { ok: true };
   });

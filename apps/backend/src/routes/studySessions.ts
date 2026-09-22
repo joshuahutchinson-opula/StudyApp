@@ -4,7 +4,6 @@ import { db } from "../db.js";
 
 export async function studySessionRoutes(app: FastifyInstance) {
   const StartBody = z.object({
-    userId: z.string().uuid(),
     mode: z.enum(["pomodoro", "deep_work", "free"]),
   });
 
@@ -13,7 +12,7 @@ export async function studySessionRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send(body.error.flatten());
 
     return db.studySession.create({
-      data: { userId: body.data.userId, mode: body.data.mode },
+      data: { userId: req.userId!, mode: body.data.mode },
     });
   });
 
@@ -25,21 +24,23 @@ export async function studySessionRoutes(app: FastifyInstance) {
     const body = EndBody.safeParse(req.body);
     if (!body.success) return reply.code(400).send(body.error.flatten());
 
+    const existing = await db.studySession.findUnique({ where: { id: params.data.id } });
+    if (!existing || existing.userId !== req.userId) {
+      return reply.code(404).send({ error: "Session not found" });
+    }
+
     return db.studySession.update({
       where: { id: params.data.id },
       data: { endedAt: new Date(), focusMinutes: body.data.focusMinutes },
     });
   });
 
-  app.get("/study-sessions/summary", async (req, reply) => {
-    const query = z.object({ userId: z.string().uuid() }).safeParse(req.query);
-    if (!query.success) return reply.code(400).send(query.error.flatten());
-
+  app.get("/study-sessions/summary", async (req) => {
     const since = new Date();
     since.setHours(0, 0, 0, 0);
 
     const sessions = await db.studySession.findMany({
-      where: { userId: query.data.userId, startedAt: { gte: since }, endedAt: { not: null } },
+      where: { userId: req.userId!, startedAt: { gte: since }, endedAt: { not: null } },
     });
 
     return {
