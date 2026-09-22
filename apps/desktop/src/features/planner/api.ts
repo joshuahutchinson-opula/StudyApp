@@ -36,3 +36,14 @@ export function useUpdateTaskStatus(userId: string, discipline: Discipline) {
     },
   });
 }
+
+export function useCreateDeadline(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ title, dueAt }: { title: string; dueAt: string }) =>
+      api.post<Deadline>("/deadlines", { userId, title, dueAt }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["deadlines", userId] });
+    },
+  });
+}

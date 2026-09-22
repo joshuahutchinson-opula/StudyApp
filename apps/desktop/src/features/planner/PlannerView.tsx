@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Discipline, Task, TaskStatus } from "@the-desk/shared";
-import { useCreateTask, useDeadlines, useTasks, useUpdateTaskStatus } from "./api";
+import { useCreateDeadline, useCreateTask, useDeadlines, useTasks, useUpdateTaskStatus } from "./api";
 
 const COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "backlog", label: "Backlog" },
@@ -59,6 +59,55 @@ function TaskCard({
   );
 }
 
+function AddDeadlineForm({ onAdd }: { onAdd: (title: string, dueAt: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [dueAt, setDueAt] = useState("");
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="shrink-0 self-center rounded-[var(--radius-base)] border border-dashed border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+      >
+        + Deadline
+      </button>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!title.trim() || !dueAt) return;
+        onAdd(title.trim(), dueAt);
+        setTitle("");
+        setDueAt("");
+        setOpen(false);
+      }}
+      className="flex shrink-0 items-center gap-2 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
+    >
+      <input
+        autoFocus
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Deadline title"
+        className="w-40 bg-transparent text-sm focus:outline-none"
+      />
+      <input
+        type="date"
+        value={dueAt}
+        onChange={(e) => setDueAt(e.target.value)}
+        className="bg-transparent text-sm focus:outline-none"
+      />
+      <button type="submit" className="text-sm" style={{ color: "var(--color-accent)" }}>
+        Add
+      </button>
+    </form>
+  );
+}
+
 function QuickAdd({ onAdd }: { onAdd: (title: string) => void }) {
   const [value, setValue] = useState("");
   return (
@@ -85,6 +134,7 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
   const { data: deadlines } = useDeadlines(userId);
   const createTask = useCreateTask(userId, discipline);
   const updateStatus = useUpdateTaskStatus(userId, discipline);
+  const createDeadline = useCreateDeadline(userId);
 
   return (
     <div className="mx-auto flex h-full max-w-6xl flex-col gap-6 px-4 py-6">
@@ -92,20 +142,19 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
         Planner
       </h1>
 
-      {deadlines && deadlines.length > 0 && (
-        <div className="flex gap-4 overflow-x-auto border-b border-[var(--color-border)] pb-4">
-          {deadlines.map((d) => (
-            <div
-              key={d.id}
-              className="shrink-0 rounded-[var(--radius-base)] px-3 py-2 text-sm"
-              style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
-            >
-              <p>{d.title}</p>
-              <p className="text-xs text-[var(--color-accent)]">{relativeDay(d.dueAt as unknown as string)}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex items-center gap-4 overflow-x-auto border-b border-[var(--color-border)] pb-4">
+        {deadlines?.map((d) => (
+          <div
+            key={d.id}
+            className="shrink-0 rounded-[var(--radius-base)] px-3 py-2 text-sm"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
+          >
+            <p>{d.title}</p>
+            <p className="text-xs text-[var(--color-accent)]">{relativeDay(d.dueAt as unknown as string)}</p>
+          </div>
+        ))}
+        <AddDeadlineForm onAdd={(title, dueAt) => createDeadline.mutate({ title, dueAt })} />
+      </div>
 
       {isLoading || !tasks ? (
         <div className="text-sm text-[var(--color-text-muted)]">Loading tasks…</div>

@@ -9,6 +9,7 @@ import { PlannerView } from "./features/planner/PlannerView";
 import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
 import { CitationLibrary } from "./features/citations/CitationLibrary";
 import { FocusTimer } from "./features/focus/FocusTimer";
+import { SearchView } from "./features/search/SearchView";
 
 // Cytoscape is a large dependency — code-split so it's only fetched when a
 // student actually opens the graph tab, not on every app load.
@@ -52,14 +53,14 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode = "binder" | "planner" | "review" | "cases" | "graph" | "citations" | "focus";
+type Mode = "binder" | "planner" | "review" | "cases" | "graph" | "citations" | "focus" | "search";
 
 function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
   const { data: binders, isLoading } = useBinders(DEMO_USER_ID);
   const binder = binders?.find((b) => b.discipline === discipline);
   const [mode, setMode] = useState<Mode>("binder");
-  const [graphTargetPageId, setGraphTargetPageId] = useState<string | undefined>(undefined);
+  const [binderTargetPageId, setBinderTargetPageId] = useState<string | undefined>(undefined);
 
   if (isLoading) {
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
@@ -69,8 +70,8 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
   // not part of the shared spine — other disciplines get their own such features later.
   const navTabs: Mode[] =
     discipline === "medicine"
-      ? ["binder", "planner", "graph", "citations", "focus", "cases"]
-      : ["binder", "planner", "graph", "citations", "focus"];
+      ? ["binder", "planner", "graph", "search", "citations", "focus", "cases"]
+      : ["binder", "planner", "graph", "search", "citations", "focus"];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -98,7 +99,9 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
                   ? "Citations"
                   : m === "focus"
                     ? "Focus"
-                    : m}
+                    : m === "search"
+                      ? "Search"
+                      : m}
           </button>
         ))}
       </div>
@@ -124,20 +127,31 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
               userId={DEMO_USER_ID}
               discipline={discipline}
               onOpenNote={(pageId) => {
-                setGraphTargetPageId(pageId);
+                setBinderTargetPageId(pageId);
                 setMode("binder");
               }}
             />
           </Suspense>
         )}
 
+        {mode === "search" && (
+          <SearchView
+            userId={DEMO_USER_ID}
+            discipline={discipline}
+            onOpenPage={(pageId) => {
+              setBinderTargetPageId(pageId);
+              setMode("binder");
+            }}
+          />
+        )}
+
         {mode === "binder" &&
           (binder ? (
             <BinderView
-              key={graphTargetPageId ?? "default"}
+              key={binderTargetPageId ?? "default"}
               binderId={binder.id}
               discipline={discipline}
-              initialPageId={graphTargetPageId}
+              initialPageId={binderTargetPageId}
               onOpenReview={() => setMode("review")}
             />
           ) : (
