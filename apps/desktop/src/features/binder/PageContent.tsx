@@ -1,7 +1,14 @@
 import type { Block } from "@the-desk/shared";
 import { RunnableCode } from "./RunnableCode";
+import type { CitationWithFormatted } from "../citations/types";
 
-export function PageContent({ blocks }: { blocks: Block[] }) {
+export function PageContent({
+  blocks,
+  citations = [],
+}: {
+  blocks: Block[];
+  citations?: CitationWithFormatted[];
+}) {
   return (
     <div className="flex flex-col gap-4">
       {blocks.map((block) => {
@@ -72,12 +79,18 @@ export function PageContent({ blocks }: { blocks: Block[] }) {
                 )}
               </figure>
             );
-          case "citationRef":
+          case "citationRef": {
+            const citation = citations.find((c) => c.id === block.citationId);
             return (
-              <span key={block.id} className="text-sm text-[var(--color-accent)]">
-                [citation]
-              </span>
+              <p
+                key={block.id}
+                className="border-l-2 pl-3 text-sm text-[var(--color-text-muted)]"
+                style={{ borderColor: "var(--color-accent)" }}
+              >
+                {citation ? citation.formatted : "[citation not found]"}
+              </p>
             );
+          }
           default:
             return null;
         }

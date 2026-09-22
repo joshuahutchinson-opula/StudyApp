@@ -7,6 +7,7 @@ import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
 import { PlannerView } from "./features/planner/PlannerView";
 import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
+import { CitationLibrary } from "./features/citations/CitationLibrary";
 
 // Cytoscape is a large dependency — code-split so it's only fetched when a
 // student actually opens the graph tab, not on every app load.
@@ -50,7 +51,7 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode = "binder" | "planner" | "review" | "cases" | "graph";
+type Mode = "binder" | "planner" | "review" | "cases" | "graph" | "citations";
 
 function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
@@ -67,8 +68,8 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
   // not part of the shared spine — other disciplines get their own such features later.
   const navTabs: Mode[] =
     discipline === "medicine"
-      ? ["binder", "planner", "graph", "cases"]
-      : ["binder", "planner", "graph"];
+      ? ["binder", "planner", "graph", "citations", "cases"]
+      : ["binder", "planner", "graph", "citations"];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -88,7 +89,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
               fontWeight: mode === m ? 600 : 400,
             }}
           >
-            {m === "cases" ? "Clinical Cases" : m === "graph" ? "Graph" : m}
+            {m === "cases" ? "Clinical Cases" : m === "graph" ? "Graph" : m === "citations" ? "Citations" : m}
           </button>
         ))}
       </div>
@@ -101,6 +102,8 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
         )}
 
         {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
+
+        {mode === "citations" && <CitationLibrary userId={DEMO_USER_ID} discipline={discipline} />}
 
         {mode === "graph" && (
           <Suspense

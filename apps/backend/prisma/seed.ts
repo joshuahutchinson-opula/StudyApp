@@ -16,6 +16,9 @@ function list(ordered: boolean, items: string[]) {
 function code(language: string, codeText: string, runnable = false) {
   return { id: randomUUID(), kind: "code" as const, language, code: codeText, runnable };
 }
+function citationRef(citationId: string) {
+  return { id: randomUUID(), kind: "citationRef" as const, citationId };
+}
 
 async function seedMedicine() {
   const existing = await db.binder.findFirst({
@@ -44,6 +47,20 @@ async function seedMedicine() {
     data: { binderId: binder.id, label: "Valvular Disease", color: "#4b8fa6", order: 2 },
   });
 
+  const hfGuideline = await db.citation.create({
+    data: {
+      userId: DEMO_USER_ID,
+      discipline: "medicine",
+      style: "ama",
+      sourceType: "article",
+      title: "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure",
+      authors: ["Paul A. Heidenreich", "Biykem Bozkurt", "David Aguilar"],
+      year: 2022,
+      publisher: "Circulation",
+      doi: "10.1161/CIR.0000000000001063",
+    },
+  });
+
   const hfrefPage = await db.page.create({
     data: {
       binderId: binder.id,
@@ -62,6 +79,7 @@ async function seedMedicine() {
           "HFrEF: dilated LV, S3 gallop, more responsive to GDMT (ACEi/ARNI, beta-blocker, MRA, SGLT2i)",
           "HFpEF: often hypertensive, diastolic dysfunction on echo, LVH, less robust mortality benefit from classic GDMT",
         ]),
+        citationRef(hfGuideline.id),
       ],
     },
   });
@@ -346,6 +364,19 @@ log("a"); log("b"); log("c");
     ],
   });
 
+  await db.citation.create({
+    data: {
+      userId: DEMO_USER_ID,
+      discipline: "software",
+      style: "ieee",
+      sourceType: "conference_paper",
+      title: "The Byzantine Generals Problem",
+      authors: ["Leslie Lamport", "Robert Shostak", "Marshall Pease"],
+      year: 1982,
+      publisher: "ACM Transactions on Programming Languages and Systems",
+    },
+  });
+
   console.log(`Seeded demo Software binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 
@@ -460,6 +491,19 @@ async function seedWriting() {
       { userId: DEMO_USER_ID, discipline: "writing", title: "Send pitch to regional desk", status: "backlog", dueAt: inDays(7) },
       { userId: DEMO_USER_ID, discipline: "writing", title: "Transcribe Alvarez interview", status: "done", dueAt: inDays(-5) },
     ],
+  });
+
+  await db.citation.create({
+    data: {
+      userId: DEMO_USER_ID,
+      discipline: "writing",
+      style: "chicago",
+      sourceType: "book",
+      title: "The Associated Press Stylebook",
+      authors: ["Associated Press"],
+      year: 2023,
+      publisher: "Associated Press",
+    },
   });
 
   console.log(`Seeded demo Writing binder ${binder.id} for user ${DEMO_USER_ID}`);
@@ -579,6 +623,19 @@ async function seedEngineering() {
     ],
   });
 
+  await db.citation.create({
+    data: {
+      userId: DEMO_USER_ID,
+      discipline: "engineering",
+      style: "ieee",
+      sourceType: "other",
+      title: "ASCE/SEI 7-22: Minimum Design Loads and Associated Criteria for Buildings and Other Structures",
+      authors: ["American Society of Civil Engineers"],
+      year: 2022,
+      publisher: "ASCE",
+    },
+  });
+
   console.log(`Seeded demo Engineering binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 
@@ -689,6 +746,19 @@ async function seedArts() {
       { userId: DEMO_USER_ID, discipline: "arts", title: "Photograph work for portfolio site", status: "backlog", dueAt: null },
       { userId: DEMO_USER_ID, discipline: "arts", title: "Order canvas for large-scale piece", status: "done", dueAt: inDays(-2) },
     ],
+  });
+
+  await db.citation.create({
+    data: {
+      userId: DEMO_USER_ID,
+      discipline: "arts",
+      style: "chicago",
+      sourceType: "book",
+      title: "Ways of Seeing",
+      authors: ["John Berger"],
+      year: 1972,
+      publisher: "Penguin Books",
+    },
   });
 
   console.log(`Seeded demo Arts binder ${binder.id} for user ${DEMO_USER_ID}`);

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
 import { useBinder, useUpdatePage } from "./api";
 import { useDueCards } from "../review/api";
+import { useCitations } from "../citations/api";
 import { PageTurn } from "./PageTurn";
 import { PageContent } from "./PageContent";
 import { TabRail } from "./TabRail";
@@ -25,6 +26,7 @@ export function BinderView({
   const { data: binder, isLoading } = useBinder(binderId);
   const updatePage = useUpdatePage(binderId);
   const { data: dueCards } = useDueCards(DEMO_USER_ID, discipline);
+  const { data: citations } = useCitations(DEMO_USER_ID, discipline);
   const [index, setIndex] = useState(0);
   const [navDirection, setNavDirection] = useState<1 | -1 | 0>(0);
 
@@ -140,7 +142,7 @@ export function BinderView({
                   />
                 </div>
               </div>
-              <PageContent blocks={currentPage.content} />
+              <PageContent blocks={currentPage.content} citations={citations} />
             </div>
           ) : null}
         </PageTurn>
