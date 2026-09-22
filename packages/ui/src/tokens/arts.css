@@ -7,12 +7,13 @@
   --font-weight-display: 700;
 
   /* Luminance ramp on a warm neutral hue (36) that tapers toward true gray
-     at the dark end, lightest to darkest. */
-  --color-ramp-0: hsl(36 24% 96%);
-  --color-ramp-1: hsl(36 20% 99%);
-  --color-ramp-2: hsl(42 14% 86%);
-  --color-ramp-3: hsl(0 0% 36%);
-  --color-ramp-4: hsl(0 0% 10%);
+     at the dark end, lightest to darkest. Canvas is a real warm gray, not a
+     near-white with a hint of cream, and text is true ink-black. */
+  --color-ramp-0: hsl(36 30% 88%);
+  --color-ramp-1: hsl(36 18% 99%);
+  --color-ramp-2: hsl(42 20% 74%);
+  --color-ramp-3: hsl(0 0% 35%);
+  --color-ramp-4: hsl(0 0% 6%);
 
   --color-bg: var(--color-ramp-0);
   --color-surface: var(--color-ramp-1);
@@ -22,9 +23,10 @@
   --color-primary: #1a1a1a;
   --color-accent: #c1432c;
 
-  /* Softest radii of all five, at both ends of the scale — gallery-card generous. */
-  --radius-sm: 10px;
-  --radius-lg: 22px;
+  /* Softest radii of all five, and now a dramatic gap between them — small
+     controls still read soft, but a gallery card should look unmistakably rounder. */
+  --radius-sm: 14px;
+  --radius-lg: 34px;
 
   --motion-duration-fast: 140ms;
   --motion-duration-base: 260ms;

@@ -10,12 +10,14 @@
   /* Luminance ramp on one cool blue-gray hue (222), dark mode so step 0 is
      the darkest rung and step 4 the lightest — same semantic ordering
      (canvas -> surface -> border -> muted text -> text) as every other
-     discipline, just inverted physically. */
-  --color-ramp-0: hsl(223 24% 6%);
-  --color-ramp-1: hsl(224 22% 10%);
-  --color-ramp-2: hsl(221 17% 18%);
-  --color-ramp-3: hsl(220 12% 59%);
-  --color-ramp-4: hsl(218 17% 91%);
+     discipline, just inverted physically. Surface lifts clearly off the
+     canvas (5% -> 14%, real card separation in the dark), and text hits
+     near-white for genuine contrast against it. */
+  --color-ramp-0: hsl(223 30% 5%);
+  --color-ramp-1: hsl(224 24% 14%);
+  --color-ramp-2: hsl(221 22% 26%);
+  --color-ramp-3: hsl(220 14% 58%);
+  --color-ramp-4: hsl(218 25% 95%);
 
   --color-bg: var(--color-ramp-0);
   --color-surface: var(--color-ramp-1);
@@ -25,9 +27,9 @@
   --color-primary: #5eead4;
   --color-accent: #7dd3fc;
 
-  /* Sharpest radii of all five — small stays near-square, large never softens much. */
-  --radius-sm: 4px;
-  --radius-lg: 8px;
+  /* Sharpest radii of all five, but still a clear 4x jump from small to large. */
+  --radius-sm: 3px;
+  --radius-lg: 12px;
 
   --motion-duration-fast: 80ms;
   --motion-duration-base: 150ms;

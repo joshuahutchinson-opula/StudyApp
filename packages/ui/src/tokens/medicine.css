@@ -6,12 +6,15 @@
   --font-weight-body: 400;
   --font-weight-display: 600;
 
-  /* Luminance ramp on one cool cyan-navy hue (195), lightest to darkest. */
-  --color-ramp-0: hsl(195 20% 96%);
-  --color-ramp-1: hsl(195 25% 99%);
-  --color-ramp-2: hsl(191 17% 82%);
-  --color-ramp-3: hsl(195 14% 34%);
-  --color-ramp-4: hsl(198 44% 11%);
+  /* Luminance ramp on one cool cyan-navy hue (195), lightest to darkest.
+     Canvas sits visibly deeper than the surface it holds (91% -> 99%, a real
+     8-point lift), and border/text steps are unmistakable, not a tint away
+     from their neighbor. */
+  --color-ramp-0: hsl(195 30% 91%);
+  --color-ramp-1: hsl(195 15% 99%);
+  --color-ramp-2: hsl(191 25% 78%);
+  --color-ramp-3: hsl(195 16% 40%);
+  --color-ramp-4: hsl(198 60% 8%);
 
   --color-bg: var(--color-ramp-0);
   --color-surface: var(--color-ramp-1);
@@ -21,10 +24,10 @@
   --color-primary: #0b3d4c;
   --color-accent: #1f7a6c;
 
-  /* Small radius unchanged from the old single value; large radius is its
-     calm, controlled companion — never as soft as Arts. */
+  /* Large radius is 3x small — a page panel should read as obviously softer
+     than a button, not numerically-different-but-invisible. */
   --radius-sm: 6px;
-  --radius-lg: 14px;
+  --radius-lg: 20px;
 
   --motion-duration-fast: 100ms;
   --motion-duration-base: 200ms;
