@@ -2,17 +2,34 @@
 [data-discipline="medicine"] {
   --font-display: "Source Serif 4", Georgia, serif;
   --font-body: "Source Serif 4", Georgia, serif;
+  /* Restrained weight throughout — clinical documents don't shout. */
+  --font-weight-body: 400;
+  --font-weight-display: 600;
 
-  --color-bg: #f3f6f7;
-  --color-surface: #ffffff;
-  --color-text: #0f2027;
-  --color-text-muted: #4b5d63;
+  /* Luminance ramp on one cool cyan-navy hue (195), lightest to darkest. */
+  --color-ramp-0: hsl(195 20% 96%);
+  --color-ramp-1: hsl(195 25% 99%);
+  --color-ramp-2: hsl(191 17% 82%);
+  --color-ramp-3: hsl(195 14% 34%);
+  --color-ramp-4: hsl(198 44% 11%);
+
+  --color-bg: var(--color-ramp-0);
+  --color-surface: var(--color-ramp-1);
+  --color-border: var(--color-ramp-2);
+  --color-text-muted: var(--color-ramp-3);
+  --color-text: var(--color-ramp-4);
   --color-primary: #0b3d4c;
   --color-accent: #1f7a6c;
-  --color-border: #c9d6d9;
 
-  --radius-base: 6px;
+  /* Small radius unchanged from the old single value; large radius is its
+     calm, controlled companion — never as soft as Arts. */
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+
   --motion-duration-fast: 100ms;
   --motion-duration-base: 200ms;
   --motion-easing: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Neutral density — the baseline every other discipline's unit is judged against. */
+  --space-unit: 8px;
 }

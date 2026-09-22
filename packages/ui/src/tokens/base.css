@@ -3,24 +3,64 @@
  * [data-discipline="..."] selector — this file only defines the fallback
  * values used before a discipline is selected (onboarding) and the variable
  * names every component may rely on.
+ *
+ * Two things are intentionally NOT overridable per discipline:
+ *
+ * 1. The spacing scale's ratios. A discipline only sets --space-unit (its
+ *    base density — tight for Engineering/Software, loose for Arts); the
+ *    --space-1..8 steps below are always the same multiples of that unit.
+ *    "Locked" means the rhythm is shared across all five disciplines even
+ *    though the unit isn't — no discipline invents its own one-off spacing
+ *    value.
+ * 2. The two-value radius scale's *shape* (one small radius for controls,
+ *    one large radius for panels) is the same contract everywhere; only the
+ *    two numbers differ per discipline.
  */
 :root {
   --font-display: "Inter", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-weight-body: 400;
+  --font-weight-display: 600;
 
-  --color-bg: #f4f4f5;
-  --color-surface: #ffffff;
-  --color-text: #18181b;
-  --color-text-muted: #52525b;
+  /*
+   * Luminance ramp: five semantic steps, lightest/lowest-emphasis (0) to
+   * darkest/highest-emphasis (4), on one discipline hue. The legacy
+   * --color-* names below are aliases onto specific rungs, so existing
+   * components don't need to know the ramp exists.
+   */
+  --color-ramp-0: hsl(240 5% 96%);
+  --color-ramp-1: hsl(240 5% 99%);
+  --color-ramp-2: hsl(240 5% 84%);
+  --color-ramp-3: hsl(240 4% 32%);
+  --color-ramp-4: hsl(240 6% 10%);
+
+  --color-bg: var(--color-ramp-0);
+  --color-surface: var(--color-ramp-1);
+  --color-border: var(--color-ramp-2);
+  --color-text-muted: var(--color-ramp-3);
+  --color-text: var(--color-ramp-4);
   --color-primary: #27272a;
   --color-accent: #3f3f46;
-  --color-border: #d4d4d8;
 
-  --radius-base: 8px;
+  /* Two-value radius scale: small (controls/chips/inputs), large (cards/panels). */
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-base: var(--radius-sm);
+
   --motion-duration-fast: 120ms;
   --motion-duration-base: 220ms;
   --motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* Locked spacing scale: every step is a fixed multiple of --space-unit,
+     which is the only thing a discipline file is allowed to override. */
   --space-unit: 8px;
+  --space-1: calc(var(--space-unit) * 0.5);
+  --space-2: var(--space-unit);
+  --space-3: calc(var(--space-unit) * 1.5);
+  --space-4: calc(var(--space-unit) * 2);
+  --space-5: calc(var(--space-unit) * 3);
+  --space-6: calc(var(--space-unit) * 4);
+  --space-7: calc(var(--space-unit) * 6);
+  --space-8: calc(var(--space-unit) * 8);
 }

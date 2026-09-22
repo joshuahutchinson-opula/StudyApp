@@ -2,17 +2,33 @@
 [data-discipline="writing"] {
   --font-display: "Source Serif 4", Georgia, serif;
   --font-body: "Source Serif 4", Georgia, serif;
+  /* Editorial masthead weight for headings; body reads like a manuscript, not a poster. */
+  --font-weight-body: 400;
+  --font-weight-display: 600;
 
-  --color-bg: #faf6ef;
-  --color-surface: #fffdf8;
-  --color-text: #2b2621;
-  --color-text-muted: #6b6255;
+  /* Luminance ramp on one warm cream hue (~35-43), lightest to darkest. */
+  --color-ramp-0: hsl(38 52% 96%);
+  --color-ramp-1: hsl(43 60% 99%);
+  --color-ramp-2: hsl(39 37% 85%);
+  --color-ramp-3: hsl(35 11% 38%);
+  --color-ramp-4: hsl(30 13% 15%);
+
+  --color-bg: var(--color-ramp-0);
+  --color-surface: var(--color-ramp-1);
+  --color-border: var(--color-ramp-2);
+  --color-text-muted: var(--color-ramp-3);
+  --color-text: var(--color-ramp-4);
   --color-primary: #3d3226;
   --color-accent: #a3512b;
-  --color-border: #e6dcc9;
 
-  --radius-base: 3px;
+  /* Restrained rounding throughout — paper doesn't have soft plastic corners. */
+  --radius-sm: 3px;
+  --radius-lg: 7px;
+
   --motion-duration-fast: 120ms;
   --motion-duration-base: 240ms;
   --motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Generous editorial breathing room — the brief's "generous line-height" extends to spacing. */
+  --space-unit: 10px;
 }

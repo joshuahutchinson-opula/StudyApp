@@ -3,17 +3,33 @@
   --font-display: "IBM Plex Sans", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Measured weight — precise, not heavy. */
+  --font-weight-body: 400;
+  --font-weight-display: 600;
 
-  --color-bg: #eef1f5;
-  --color-surface: #ffffff;
-  --color-text: #101a2b;
-  --color-text-muted: #4d5a70;
+  /* Luminance ramp on one cool blue hue (215), lightest to darkest. */
+  --color-ramp-0: hsl(214 26% 95%);
+  --color-ramp-1: hsl(215 30% 99%);
+  --color-ramp-2: hsl(215 31% 85%);
+  --color-ramp-3: hsl(218 19% 37%);
+  --color-ramp-4: hsl(218 46% 12%);
+
+  --color-bg: var(--color-ramp-0);
+  --color-surface: var(--color-ramp-1);
+  --color-border: var(--color-ramp-2);
+  --color-text-muted: var(--color-ramp-3);
+  --color-text: var(--color-ramp-4);
   --color-primary: #14335e;
   --color-accent: #2b6cb0;
-  --color-border: #ccd6e4;
 
-  --radius-base: 2px;
+  /* Barely-there rounding even on large surfaces — blueprints don't round corners. */
+  --radius-sm: 2px;
+  --radius-lg: 4px;
+
   --motion-duration-fast: 100ms;
   --motion-duration-base: 180ms;
   --motion-easing: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Tight, precise density — second-tightest after Software. */
+  --space-unit: 7px;
 }
