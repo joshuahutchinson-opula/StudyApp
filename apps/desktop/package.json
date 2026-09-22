@@ -16,6 +16,7 @@
     "@the-desk/ui": "workspace:*",
     "@tanstack/react-query": "^5.59.0",
     "@tauri-apps/api": "^2.1.1",
+    "cytoscape": "^3.30.4",
     "motion": "^11.11.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

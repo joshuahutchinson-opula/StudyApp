@@ -4,6 +4,7 @@ import { binderRoutes } from "./routes/binders.js";
 import { cardRoutes } from "./routes/cards.js";
 import { taskRoutes } from "./routes/tasks.js";
 import { caseRoutes } from "./routes/cases.js";
+import { graphRoutes } from "./routes/graph.js";
 
 const app = Fastify({ logger: true });
 
@@ -15,6 +16,7 @@ await app.register(binderRoutes);
 await app.register(cardRoutes);
 await app.register(taskRoutes);
 await app.register(caseRoutes);
+await app.register(graphRoutes);
 
 const port = Number(process.env.PORT ?? 4000);
 

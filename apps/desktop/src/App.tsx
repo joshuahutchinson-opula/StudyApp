@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { DEMO_USER_ID, DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
 import { useDisciplineStore } from "./store/useDisciplineStore";
@@ -7,6 +7,10 @@ import { BinderView } from "./features/binder/BinderView";
 import { ReviewSession } from "./features/review/ReviewSession";
 import { PlannerView } from "./features/planner/PlannerView";
 import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
+
+// Cytoscape is a large dependency — code-split so it's only fetched when a
+// student actually opens the graph tab, not on every app load.
+const GraphView = lazy(() => import("./features/graph/GraphView").then((m) => ({ default: m.GraphView })));
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   return (
@@ -46,13 +50,14 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode = "binder" | "planner" | "review" | "cases";
+type Mode = "binder" | "planner" | "review" | "cases" | "graph";
 
 function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSwitchDiscipline: () => void }) {
   const meta = DISCIPLINE_META[discipline];
   const { data: binders, isLoading } = useBinders(DEMO_USER_ID);
   const binder = binders?.find((b) => b.discipline === discipline);
   const [mode, setMode] = useState<Mode>("binder");
+  const [graphTargetPageId, setGraphTargetPageId] = useState<string | undefined>(undefined);
 
   if (isLoading) {
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
@@ -60,7 +65,10 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
 
   // "cases" (clinical reasoning simulator) is a Medicine-only signature feature,
   // not part of the shared spine — other disciplines get their own such features later.
-  const navTabs: Mode[] = discipline === "medicine" ? ["binder", "planner", "cases"] : ["binder", "planner"];
+  const navTabs: Mode[] =
+    discipline === "medicine"
+      ? ["binder", "planner", "graph", "cases"]
+      : ["binder", "planner", "graph"];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -80,7 +88,7 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
               fontWeight: mode === m ? 600 : 400,
             }}
           >
-            {m === "cases" ? "Clinical Cases" : m}
+            {m === "cases" ? "Clinical Cases" : m === "graph" ? "Graph" : m}
           </button>
         ))}
       </div>
@@ -94,9 +102,30 @@ function Desk({ discipline, onSwitchDiscipline }: { discipline: Discipline; onSw
 
         {mode === "cases" && <ClinicalCaseSim userId={DEMO_USER_ID} />}
 
+        {mode === "graph" && (
+          <Suspense
+            fallback={<div className="p-10 text-sm text-[var(--color-text-muted)]">Loading graph…</div>}
+          >
+            <GraphView
+              userId={DEMO_USER_ID}
+              discipline={discipline}
+              onOpenNote={(pageId) => {
+                setGraphTargetPageId(pageId);
+                setMode("binder");
+              }}
+            />
+          </Suspense>
+        )}
+
         {mode === "binder" &&
           (binder ? (
-            <BinderView binderId={binder.id} discipline={discipline} onOpenReview={() => setMode("review")} />
+            <BinderView
+              key={graphTargetPageId ?? "default"}
+              binderId={binder.id}
+              discipline={discipline}
+              initialPageId={graphTargetPageId}
+              onOpenReview={() => setMode("review")}
+            />
           ) : (
             <div className="mx-auto flex max-w-2xl flex-col justify-center px-6 py-20">
               <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>

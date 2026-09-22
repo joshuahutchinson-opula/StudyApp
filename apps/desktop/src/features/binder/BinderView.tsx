@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEMO_USER_ID, type Discipline } from "@the-desk/shared";
 import { useBinder, useUpdatePage } from "./api";
 import { useDueCards } from "../review/api";
@@ -13,10 +13,13 @@ type DisplayItem = { type: "toc" } | { type: "page"; pageId: string };
 export function BinderView({
   binderId,
   discipline,
+  initialPageId,
   onOpenReview,
 }: {
   binderId: string;
   discipline: Discipline;
+  /** Jump straight to this page on mount — e.g. arriving from a graph node click. */
+  initialPageId?: string;
   onOpenReview: () => void;
 }) {
   const { data: binder, isLoading } = useBinder(binderId);
@@ -34,6 +37,15 @@ export function BinderView({
     () => [{ type: "toc" }, ...pages.map((p) => ({ type: "page" as const, pageId: p.id }))],
     [pages],
   );
+
+  useEffect(() => {
+    if (!initialPageId) return;
+    const target = items.findIndex((item) => item.type === "page" && item.pageId === initialPageId);
+    if (target >= 0) setIndex(target);
+    // Only react to the incoming request (and once items are available), not
+    // to every items/index change — otherwise this would fight manual navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPageId, items.length]);
 
   if (isLoading || !binder) {
     return <div className="p-10 text-sm text-[var(--color-text-muted)]">Opening binder…</div>;
