@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Discipline } from "@the-desk/shared";
+import { useSpring } from "../../hooks/useSpring";
 import { useDueCards, useReviewCard } from "./api";
 import type { ReviewGrade } from "./types";
 
@@ -22,6 +23,7 @@ export function ReviewSession({
 }) {
   const { data: dueCards, isLoading } = useDueCards(userId, discipline);
   const reviewCard = useReviewCard(userId, discipline);
+  const spring = useSpring();
 
   const [revealed, setRevealed] = useState(false);
   // Cards graded this session are hidden locally rather than re-snapshotted
@@ -72,37 +74,59 @@ export function ReviewSession({
         <AnimatePresence mode="wait">
           <motion.div
             key={current.id}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.18 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={spring.base}
           >
-            <button
-              type="button"
-              onClick={() => setRevealed((r) => !r)}
-              className="min-h-[280px] w-full rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10 text-left"
-            >
-              <p className="mb-4 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-                {revealed ? "Answer" : "Question — click to reveal"}
-              </p>
-              <p className="text-lg leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
-                {revealed ? current.back : current.front}
-              </p>
-            </button>
+            <div style={{ perspective: 1600 }}>
+              <motion.button
+                type="button"
+                onClick={() => setRevealed((r) => !r)}
+                animate={{ rotateY: revealed ? 180 : 0 }}
+                transition={spring.base}
+                className="relative block min-h-[280px] w-full text-left"
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <div
+                  className="absolute inset-0 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10"
+                  style={{ backfaceVisibility: "hidden" }}
+                >
+                  <p className="mb-4 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                    Question — click to reveal
+                  </p>
+                  <p className="text-lg leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
+                    {current.front}
+                  </p>
+                </div>
+                <div
+                  className="relative rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-10"
+                  style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+                >
+                  <p className="mb-4 text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Answer</p>
+                  <p className="text-lg leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
+                    {current.back}
+                  </p>
+                </div>
+              </motion.button>
+            </div>
 
             <div className="mt-6 grid grid-cols-4 gap-2">
               {GRADE_BUTTONS.map((btn) => (
-                <button
+                <motion.button
                   key={btn.grade}
                   type="button"
                   disabled={!revealed}
                   onClick={() => grade(btn.grade)}
-                  className="flex flex-col items-center gap-1 rounded-[var(--radius-base)] border py-3 text-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+                  whileTap={revealed ? { scale: 0.92 } : undefined}
+                  animate={{ opacity: revealed ? 1 : 0.3 }}
+                  transition={spring.fast}
+                  className="flex flex-col items-center gap-1 rounded-[var(--radius-base)] border py-3 text-sm disabled:cursor-not-allowed"
                   style={{ borderColor: btn.color, color: btn.color }}
                 >
                   <span className="font-medium">{btn.label}</span>
                   <span className="text-xs opacity-70">{btn.hint}</span>
-                </button>
+                </motion.button>
               ))}
             </div>
           </motion.div>

@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
+import { useSpring } from "./hooks/useSpring";
 import { useDisciplineStore } from "./store/useDisciplineStore";
 import { useAuthStore } from "./store/useAuthStore";
 import { LoginScreen } from "./features/auth/LoginScreen";
@@ -20,6 +22,8 @@ import { CritiqueRoom } from "./features/critique/CritiqueRoom";
 const GraphView = lazy(() => import("./features/graph/GraphView").then((m) => ({ default: m.GraphView })));
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
+  const spring = useSpring();
+
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6">
       <h1 className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">The Desk</h1>
@@ -30,13 +34,21 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
         {DISCIPLINES.map((discipline) => {
           const meta = DISCIPLINE_META[discipline];
           return (
-            <button
+            <motion.button
               key={discipline}
               type="button"
               onClick={() => onSelect(discipline)}
-              className="group flex items-baseline justify-between py-5 text-left transition-colors"
+              initial="rest"
+              whileHover="hover"
+              whileTap={{ scale: 0.99 }}
+              className="flex items-baseline justify-between py-5 text-left"
             >
-              <span data-discipline={discipline} className="flex items-baseline gap-3">
+              <motion.span
+                data-discipline={discipline}
+                className="flex items-baseline gap-3"
+                variants={{ rest: { x: 0 }, hover: { x: 4 } }}
+                transition={spring.fast}
+              >
                 <span
                   aria-hidden
                   className="inline-block h-2 w-2 rounded-full"
@@ -45,11 +57,15 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
                 <span className="text-xl" style={{ fontFamily: "var(--font-display)" }}>
                   {meta.label}
                 </span>
-              </span>
-              <span className="text-sm text-[var(--color-text-muted)] opacity-0 transition-opacity group-hover:opacity-100">
+              </motion.span>
+              <motion.span
+                className="text-sm text-[var(--color-text-muted)]"
+                variants={{ rest: { opacity: 0, x: -8 }, hover: { opacity: 1, x: 0 } }}
+                transition={spring.fast}
+              >
                 {meta.tagline}
-              </span>
-            </button>
+              </motion.span>
+            </motion.button>
           );
         })}
       </div>
@@ -81,6 +97,7 @@ function Desk({
   onLogOut: () => void;
 }) {
   const meta = DISCIPLINE_META[discipline];
+  const spring = useSpring();
   const { data: binders, isLoading } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
   const [mode, setMode] = useState<Mode>("binder");
@@ -105,11 +122,12 @@ function Desk({
         </button>
         <span className="text-[var(--color-border)]">/</span>
         {navTabs.map((m) => (
-          <button
+          <motion.button
             key={m}
             type="button"
             onClick={() => setMode(m)}
-            className="capitalize"
+            whileTap={{ scale: 0.94 }}
+            className="relative flex flex-col items-center gap-1.5 pb-1 capitalize"
             style={{
               color: mode === m ? "var(--color-text)" : "var(--color-text-muted)",
               fontWeight: mode === m ? 600 : 400,
@@ -130,7 +148,15 @@ function Desk({
                         : m === "critique"
                           ? "Critique Room"
                           : m}
-          </button>
+            {mode === m && (
+              <motion.span
+                layoutId="nav-indicator"
+                className="absolute -bottom-2 h-0.5 w-full rounded-full"
+                style={{ background: "var(--color-accent)" }}
+                transition={spring.base}
+              />
+            )}
+          </motion.button>
         ))}
         <button
           type="button"

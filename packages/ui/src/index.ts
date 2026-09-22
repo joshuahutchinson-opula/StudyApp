@@ -12,3 +12,5 @@ export const DISCIPLINE_META: Record<Discipline, DisciplineMeta> = {
   engineering: { label: "Engineering", tagline: "Problem sets, diagrams, and standards." },
   arts: { label: "Arts", tagline: "Portfolio, critique, and studio work." },
 };
+
+export * from "./motion";

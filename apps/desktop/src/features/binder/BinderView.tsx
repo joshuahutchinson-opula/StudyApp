@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "motion/react";
 import type { Discipline } from "@the-desk/shared";
+import { useSpring } from "../../hooks/useSpring";
 import {
   useAddAnnotation,
   useBinder,
@@ -257,14 +259,21 @@ function SortableTocEntry({
   page: { id: string; title: string };
   onSelect: (pageId: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const spring = useSpring();
+  // transform tracks the pointer directly while dragging — real, not animated.
+  // Dropping dnd-kit's own CSS `transition` and animating with Motion's `layout`
+  // instead means the settle-into-place after a drop is real spring physics
+  // (inertia + overshoot), not a fixed-duration ease.
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: page.id,
   });
 
   return (
-    <li
+    <motion.li
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      layout
+      transition={spring.base}
+      style={{ transform: CSS.Transform.toString(transform), opacity: isDragging ? 0.4 : 1 }}
       className="flex items-center gap-2"
     >
       <span
@@ -282,7 +291,7 @@ function SortableTocEntry({
       >
         {page.title}
       </button>
-    </li>
+    </motion.li>
   );
 }
 

@@ -1,4 +1,6 @@
+import { motion } from "motion/react";
 import type { Page } from "@the-desk/shared";
+import { useSpring } from "../../hooks/useSpring";
 
 export function ThumbnailStrip({
   pages,
@@ -9,20 +11,24 @@ export function ThumbnailStrip({
   currentPageId: string | null;
   onSelect: (pageId: string) => void;
 }) {
+  const spring = useSpring();
+
   return (
     <div className="flex gap-2 overflow-x-auto border-t border-[var(--color-border)] px-4 py-3">
       {pages.map((page, i) => {
         const active = page.id === currentPageId;
         return (
-          <button
+          <motion.button
             key={page.id}
             type="button"
             onClick={() => onSelect(page.id)}
-            className="flex h-14 w-11 shrink-0 flex-col justify-between rounded-sm p-1.5 text-left transition-opacity"
+            whileTap={{ scale: 0.9 }}
+            animate={{ opacity: active ? 1 : 0.65, scale: active ? 1.08 : 1, y: active ? -2 : 0 }}
+            transition={spring.fast}
+            className="flex h-14 w-11 shrink-0 flex-col justify-between rounded-sm p-1.5 text-left"
             style={{
               background: "var(--color-surface)",
               border: `1.5px solid ${active ? "var(--color-accent)" : "var(--color-border)"}`,
-              opacity: active ? 1 : 0.65,
             }}
             title={page.title}
           >
@@ -31,7 +37,7 @@ export function ThumbnailStrip({
               className="h-1 w-full rounded-full"
               style={{ background: page.reviewed ? "var(--color-accent)" : "var(--color-border)" }}
             />
-          </button>
+          </motion.button>
         );
       })}
     </div>
