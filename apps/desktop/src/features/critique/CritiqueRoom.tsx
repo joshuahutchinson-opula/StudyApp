@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { useBinder } from "../binder/api";
+import { SpringButton } from "../../components/SpringButton";
+import { useSpring } from "../../hooks/useSpring";
 import { useAddComment, useCreateThread, useCritiqueThreads, useResolveThread } from "./api";
 import type { CritiqueThread } from "./types";
 
@@ -24,9 +27,9 @@ function ThreadPanel({
         <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
           {thread.resolved ? "Resolved" : "Open"}
         </p>
-        <button type="button" onClick={onClose} className="text-xs text-[var(--color-text-muted)]">
+        <SpringButton type="button" onClick={onClose} className="text-xs text-[var(--color-text-muted)]">
           Close
-        </button>
+        </SpringButton>
       </div>
 
       <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
@@ -55,16 +58,16 @@ function ThreadPanel({
           className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
         />
         <div className="flex justify-between">
-          <button type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
+          <SpringButton type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
             Reply
-          </button>
-          <button
+          </SpringButton>
+          <SpringButton
             type="button"
             onClick={() => resolveThread.mutate({ threadId: thread.id, resolved: !thread.resolved })}
             className="text-xs text-[var(--color-text-muted)]"
           >
             {thread.resolved ? "Reopen" : "Mark resolved"}
-          </button>
+          </SpringButton>
         </div>
       </form>
     </div>
@@ -105,18 +108,19 @@ function NewPinForm({
         className="w-full resize-none rounded-sm border border-[var(--color-border)] bg-transparent px-2 py-1 text-sm focus:outline-none"
       />
       <div className="flex justify-between">
-        <button type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
+        <SpringButton type="submit" className="text-xs" style={{ color: "var(--color-accent)" }}>
           Pin comment
-        </button>
-        <button type="button" onClick={onDone} className="text-xs text-[var(--color-text-muted)]">
+        </SpringButton>
+        <SpringButton type="button" onClick={onDone} className="text-xs text-[var(--color-text-muted)]">
           Cancel
-        </button>
+        </SpringButton>
       </div>
     </form>
   );
 }
 
 export function CritiqueRoom({ binderId }: { binderId: string }) {
+  const spring = useSpring();
   const { data: binder, isLoading } = useBinder(binderId);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -154,7 +158,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
       {pagesWithImages.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {pagesWithImages.map(({ page }) => (
-            <button
+            <SpringButton
               key={page.id}
               type="button"
               onClick={() => {
@@ -162,6 +166,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
                 setActiveThreadId(null);
                 setPendingPin(null);
               }}
+              whileTap={{ scale: 0.95 }}
               className="rounded-full border px-3 py-1 text-sm"
               style={{
                 borderColor: page.id === selected.page.id ? "var(--color-accent)" : "var(--color-border)",
@@ -169,7 +174,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
               }}
             >
               {page.title}
-            </button>
+            </SpringButton>
           ))}
         </div>
       )}
@@ -188,7 +193,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
         >
           <img src={selected.image.url} alt={selected.image.caption ?? ""} className="block w-full" />
           {threads?.map((t) => (
-            <button
+            <motion.button
               key={t.id}
               type="button"
               onClick={(e) => {
@@ -196,6 +201,10 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
                 setPendingPin(null);
                 setActiveThreadId(t.id);
               }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileTap={{ scale: 0.85 }}
+              transition={spring.base}
               className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-medium text-white shadow"
               style={{
                 left: `${t.x}%`,
@@ -205,7 +214,7 @@ export function CritiqueRoom({ binderId }: { binderId: string }) {
               title={t.comments[0]?.body}
             >
               {t.comments.length}
-            </button>
+            </motion.button>
           ))}
         </div>
 

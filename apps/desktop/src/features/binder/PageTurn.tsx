@@ -1,5 +1,6 @@
 import { animate, motion, useMotionValue, useTransform } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
+import { SpringButton } from "../../components/SpringButton";
 import { useSpring } from "../../hooks/useSpring";
 
 const DRAG_RANGE = 260; // px of drag mapped to the full preview tilt
@@ -87,24 +88,26 @@ export function PageTurn({
       </motion.div>
 
       {canGoPrev && (
-        <button
+        <SpringButton
           type="button"
           aria-label="Previous page"
           onClick={onPrev}
+          whileTap={{ scale: 0.85, x: -3 }}
           className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-3 text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ‹
-        </button>
+        </SpringButton>
       )}
       {canGoNext && (
-        <button
+        <SpringButton
           type="button"
           aria-label="Next page"
           onClick={onNext}
+          whileTap={{ scale: 0.85, x: 3 }}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-3 text-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ›
-        </button>
+        </SpringButton>
       )}
     </div>
   );

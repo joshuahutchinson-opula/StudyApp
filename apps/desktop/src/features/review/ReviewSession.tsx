@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Discipline } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 import { useSpring } from "../../hooks/useSpring";
 import { useDueCards, useReviewCard } from "./api";
 import type { ReviewGrade } from "./types";
@@ -47,13 +48,13 @@ export function ReviewSession({
   return (
     <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6">
       <div className="mb-6 flex items-center justify-between">
-        <button
+        <SpringButton
           type="button"
           onClick={onExit}
           className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ‹ Back to binder
-        </button>
+        </SpringButton>
         <span className="text-sm text-[var(--color-text-muted)]">
           {queue.length} due · {reviewedIds.length} reviewed
         </span>

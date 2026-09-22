@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DISCIPLINE_DEFAULT_CITATION_STYLE, type Discipline } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 import { useCitations, useCreateCitation, type NewCitationInput } from "./api";
 
 const STYLE_LABEL: Record<string, string> = {
@@ -19,13 +20,13 @@ function AddCitationForm({ onAdd }: { onAdd: (input: NewCitationInput) => void }
 
   if (!open) {
     return (
-      <button
+      <SpringButton
         type="button"
         onClick={() => setOpen(true)}
         className="self-start rounded-[var(--radius-base)] border border-dashed border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         + Add citation
-      </button>
+      </SpringButton>
     );
   }
 
@@ -87,20 +88,21 @@ function AddCitationForm({ onAdd }: { onAdd: (input: NewCitationInput) => void }
         </select>
       </div>
       <div className="flex gap-2">
-        <button
+        <SpringButton
           type="submit"
+          whileTap={{ scale: 0.96 }}
           className="rounded-[var(--radius-base)] px-4 py-2 text-sm"
           style={{ background: "var(--color-accent)", color: "#fff" }}
         >
           Save
-        </button>
-        <button
+        </SpringButton>
+        <SpringButton
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-[var(--radius-base)] px-4 py-2 text-sm text-[var(--color-text-muted)]"
         >
           Cancel
-        </button>
+        </SpringButton>
       </div>
     </form>
   );

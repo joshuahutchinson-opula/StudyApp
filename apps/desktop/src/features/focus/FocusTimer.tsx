@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "motion/react";
+import { SpringButton } from "../../components/SpringButton";
+import { useSpring } from "../../hooks/useSpring";
 import { useEndSession, useStartSession, useStudySummary, type StudyMode } from "./api";
 
 const MODE_TARGET_SECONDS: Record<StudyMode, number | null> = {
@@ -20,6 +23,7 @@ function formatTime(totalSeconds: number) {
 }
 
 export function FocusTimer({ userId }: { userId: string }) {
+  const spring = useSpring();
   const [mode, setMode] = useState<StudyMode>("pomodoro");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -85,37 +89,41 @@ export function FocusTimer({ userId }: { userId: string }) {
         <>
           <div className="flex gap-2">
             {(Object.keys(MODE_TARGET_SECONDS) as StudyMode[]).map((m) => (
-              <button
+              <motion.button
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className="rounded-[var(--radius-base)] border px-3 py-1.5 text-sm"
-                style={{
+                whileTap={{ scale: 0.95 }}
+                animate={{
                   borderColor: mode === m ? "var(--color-accent)" : "var(--color-border)",
                   color: mode === m ? "var(--color-accent)" : "var(--color-text-muted)",
                 }}
+                transition={spring.fast}
+                className="rounded-[var(--radius-base)] border px-3 py-1.5 text-sm"
               >
                 {MODE_LABEL[m]}
-              </button>
+              </motion.button>
             ))}
           </div>
-          <button
+          <SpringButton
             type="button"
             onClick={start}
+            whileTap={{ scale: 0.92 }}
             className="rounded-[var(--radius-base)] px-6 py-2.5 text-sm"
             style={{ background: "var(--color-accent)", color: "#fff" }}
           >
             Start
-          </button>
+          </SpringButton>
         </>
       ) : (
-        <button
+        <SpringButton
           type="button"
           onClick={stop}
+          whileTap={{ scale: 0.92 }}
           className="rounded-[var(--radius-base)] border border-[var(--color-border)] px-6 py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           Stop
-        </button>
+        </SpringButton>
       )}
 
       {summary && (

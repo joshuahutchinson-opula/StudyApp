@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import cytoscape, { type Core, type NodeSingular } from "cytoscape";
 import edgehandles, { type EdgeHandlesInstance } from "cytoscape-edgehandles";
 import type { Discipline } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 import { useCreateGraphEdge, useGraph } from "./api";
 import type { GraphNodeDto } from "./types";
 
@@ -228,9 +229,10 @@ export function GraphView({
   return (
     <div className="relative h-[calc(100vh-49px)]">
       <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
-        <button
+        <SpringButton
           type="button"
           onClick={() => setLinkMode((v) => !v)}
+          whileTap={{ scale: 0.95 }}
           className="rounded-full px-3 py-1.5 text-xs"
           style={{
             background: linkMode ? "var(--color-accent)" : "var(--color-surface)",
@@ -239,7 +241,7 @@ export function GraphView({
           }}
         >
           {linkMode ? "Link mode: drag between nodes to connect" : "Link mode"}
-        </button>
+        </SpringButton>
       </div>
       <div ref={containerRef} className="h-full w-full" />
       {hover && (

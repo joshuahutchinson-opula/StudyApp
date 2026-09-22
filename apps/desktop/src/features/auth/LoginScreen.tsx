@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
 import { api } from "../../api/client";
+import { SpringButton } from "../../components/SpringButton";
 import { useAuthStore, type AuthUser } from "../../store/useAuthStore";
 
 interface AuthResponse {
@@ -91,23 +92,24 @@ export function LoginScreen() {
 
         {error && <p className="text-sm" style={{ color: "#dc2626" }}>{error}</p>}
 
-        <button
+        <SpringButton
           type="submit"
           disabled={submitting}
+          whileTap={submitting ? undefined : { scale: 0.96 }}
           className="mt-2 rounded-[var(--radius-base)] px-4 py-2 text-sm disabled:opacity-50"
           style={{ background: "var(--color-accent)", color: "#fff" }}
         >
           {submitting ? "…" : mode === "login" ? "Log in" : "Create account"}
-        </button>
+        </SpringButton>
       </form>
 
-      <button
+      <SpringButton
         type="button"
         onClick={() => setMode(mode === "login" ? "register" : "login")}
         className="mt-4 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         {mode === "login" ? "New here? Create an account" : "Already have an account? Log in"}
-      </button>
+      </SpringButton>
 
       {mode === "login" && (
         <p className="mt-8 text-xs text-[var(--color-text-muted)]">

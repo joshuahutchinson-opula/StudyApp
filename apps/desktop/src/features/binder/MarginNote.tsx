@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { MarginAnnotation } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 
 export function MarginNote({
   annotations,
@@ -57,13 +58,13 @@ export function MarginNote({
           />
         </form>
       ) : (
-        <button
+        <SpringButton
           type="button"
           onClick={() => setAdding(true)}
           className="self-start text-xs text-[var(--color-text-muted)] opacity-60 hover:text-[var(--color-text)] hover:opacity-100"
         >
           + note
-        </button>
+        </SpringButton>
       )}
     </div>
   );

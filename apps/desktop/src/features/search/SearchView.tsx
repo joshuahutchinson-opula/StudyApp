@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Discipline } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 import { useSearch } from "./api";
 import type { SearchResult } from "./types";
 
@@ -51,11 +52,12 @@ export function SearchView({
           <p className="text-sm text-[var(--color-text-muted)]">No matches for "{debounced}".</p>
         )}
         {results?.map((r) => (
-          <button
+          <SpringButton
             key={`${r.kind}-${r.id}`}
             type="button"
             onClick={() => r.pageId && onOpenPage(r.pageId)}
             disabled={!r.pageId}
+            whileTap={r.pageId ? { scale: 0.98 } : undefined}
             className="flex flex-col gap-1 rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left disabled:cursor-default"
           >
             <div className="flex items-center gap-2">
@@ -68,7 +70,7 @@ export function SearchView({
               <span className="text-sm font-medium">{r.title}</span>
             </div>
             <p className="text-xs text-[var(--color-text-muted)]">{r.snippet}</p>
-          </button>
+          </SpringButton>
         ))}
       </div>
     </div>

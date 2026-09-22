@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { SpringButton } from "../../components/SpringButton";
+import { useSpring } from "../../hooks/useSpring";
 import { useCase, useCases, useSubmitAttempt } from "./api";
 import type { CaseAttemptResult } from "./types";
 
@@ -9,6 +12,7 @@ function DifferentialInput({
   entries: string[];
   onChange: (entries: string[]) => void;
 }) {
+  const spring = useSpring();
   const [draft, setDraft] = useState("");
 
   function commit() {
@@ -20,23 +24,31 @@ function DifferentialInput({
   return (
     <div>
       <div className="mb-2 flex flex-wrap gap-2">
-        {entries.map((entry) => (
-          <span
-            key={entry}
-            className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm"
-            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
-          >
-            {entry}
-            <button
-              type="button"
-              onClick={() => onChange(entries.filter((e) => e !== entry))}
-              aria-label={`Remove ${entry}`}
-              className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        <AnimatePresence>
+          {entries.map((entry) => (
+            <motion.span
+              key={entry}
+              layout
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={spring.base}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm"
+              style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
             >
-              ×
-            </button>
-          </span>
-        ))}
+              {entry}
+              <SpringButton
+                type="button"
+                onClick={() => onChange(entries.filter((e) => e !== entry))}
+                aria-label={`Remove ${entry}`}
+                whileTap={{ scale: 0.8 }}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              >
+                ×
+              </SpringButton>
+            </motion.span>
+          ))}
+        </AnimatePresence>
       </div>
       <input
         value={draft}
@@ -105,19 +117,21 @@ function FeedbackPanel({ result, onRetry }: { result: CaseAttemptResult; onRetry
         </ul>
       </div>
 
-      <button
+      <SpringButton
         type="button"
         onClick={onRetry}
+        whileTap={{ scale: 0.95 }}
         className="self-start rounded-[var(--radius-base)] px-4 py-2 text-sm"
         style={{ background: "var(--color-accent)", color: "#fff" }}
       >
         Try again
-      </button>
+      </SpringButton>
     </div>
   );
 }
 
 export function ClinicalCaseSim({ userId }: { userId: string }) {
+  const spring = useSpring();
   const { data: cases, isLoading: casesLoading } = useCases();
   const firstCaseId = cases?.[0]?.id;
   const { data: clinicalCase, isLoading: caseLoading } = useCase(firstCaseId);
@@ -164,12 +178,14 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
             <p className="mb-2 text-sm font-medium">Order your workup</p>
             <div className="grid grid-cols-2 gap-2">
               {clinicalCase.testChoices.map((test) => (
-                <label
+                <motion.label
                   key={test}
-                  className="flex items-center gap-2 rounded-[var(--radius-base)] border px-3 py-2 text-sm"
-                  style={{
+                  whileTap={{ scale: 0.97 }}
+                  animate={{
                     borderColor: tests.includes(test) ? "var(--color-accent)" : "var(--color-border)",
                   }}
+                  transition={spring.fast}
+                  className="flex items-center gap-2 rounded-[var(--radius-base)] border px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -177,12 +193,12 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
                     onChange={() => toggleTest(test)}
                   />
                   {test}
-                </label>
+                </motion.label>
               ))}
             </div>
           </div>
 
-          <button
+          <SpringButton
             type="button"
             disabled={differential.length === 0 || submitAttempt.isPending}
             onClick={() =>
@@ -191,11 +207,12 @@ export function ClinicalCaseSim({ userId }: { userId: string }) {
                 { onSuccess: setResult },
               )
             }
+            whileTap={differential.length === 0 || submitAttempt.isPending ? undefined : { scale: 0.95 }}
             className="self-start rounded-[var(--radius-base)] px-5 py-2.5 text-sm disabled:opacity-40"
             style={{ background: "var(--color-accent)", color: "#fff" }}
           >
             {submitAttempt.isPending ? "Grading…" : "Submit"}
-          </button>
+          </SpringButton>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { SpringButton } from "../../components/SpringButton";
 
 // Executes the snippet inside a sandboxed iframe with scripts-only permission
 // (no allow-same-origin) so it can never reach the parent window, cookies, or
@@ -50,15 +51,16 @@ export function RunnableCode({ code }: { code: string }) {
   return (
     <div className="mt-2">
       <div className="flex items-center gap-2">
-        <button
+        <SpringButton
           type="button"
           onClick={run}
           disabled={running}
+          whileTap={running ? undefined : { scale: 0.92 }}
           className="rounded-[var(--radius-base)] px-3 py-1 text-xs disabled:opacity-50"
           style={{ background: "var(--color-accent)", color: "#0b0d12", fontFamily: "var(--font-mono)" }}
         >
           {running ? "running…" : "▸ run"}
-        </button>
+        </SpringButton>
         <span className="text-xs text-[var(--color-text-muted)]">sandboxed — no network, no parent access</span>
       </div>
       <iframe ref={iframeRef} sandbox="allow-scripts" style={{ display: "none" }} title="code-sandbox" />

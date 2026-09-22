@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Deadline, Task } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -28,23 +29,23 @@ export function CalendarView({ tasks, deadlines }: { tasks: Task[]; deadlines: D
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <button
+        <SpringButton
           type="button"
           onClick={() => setCursor(new Date(year, month - 1, 1))}
           className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           ‹ Prev
-        </button>
+        </SpringButton>
         <p className="text-sm font-medium">
           {firstOfMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
         </p>
-        <button
+        <SpringButton
           type="button"
           onClick={() => setCursor(new Date(year, month + 1, 1))}
           className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           Next ›
-        </button>
+        </SpringButton>
       </div>
 
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-border)]">

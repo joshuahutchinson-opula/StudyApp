@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import type { Discipline, Task, TaskStatus } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
+import { useSpring } from "../../hooks/useSpring";
 import { useCreateDeadline, useCreateTask, useDeadlines, useTasks, useUpdateTaskStatus } from "./api";
 import { ListView } from "./ListView";
 import { CalendarView } from "./CalendarView";
@@ -26,24 +29,24 @@ function MoveButtons({ status, onMove }: { status: TaskStatus; onMove: (status: 
   return (
     <div className="flex gap-1">
       {currentIdx > 0 && (
-        <button
+        <SpringButton
           type="button"
           onClick={() => onMove(COLUMNS[currentIdx - 1]!.status)}
           className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           aria-label={`Move back to ${COLUMNS[currentIdx - 1]!.label}`}
         >
           ‹
-        </button>
+        </SpringButton>
       )}
       {currentIdx < COLUMNS.length - 1 && (
-        <button
+        <SpringButton
           type="button"
           onClick={() => onMove(COLUMNS[currentIdx + 1]!.status)}
           className="rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           aria-label={`Move forward to ${COLUMNS[currentIdx + 1]!.label}`}
         >
           ›
-        </button>
+        </SpringButton>
       )}
     </div>
   );
@@ -66,6 +69,7 @@ function TaskCard({
   onMoveSubtask: (subtaskId: string, status: TaskStatus) => void;
   onAddSubtask: (title: string) => void;
 }) {
+  const spring = useSpring();
   const [addingSubtask, setAddingSubtask] = useState(false);
   const doneCount = subtasks.filter((s) => s.status === "done").length;
 
@@ -87,17 +91,20 @@ function TaskCard({
         <ul className="mt-2 flex flex-col gap-1 border-t border-[var(--color-border)] pt-2">
           {subtasks.map((s) => (
             <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
-              <button
+              <motion.button
                 type="button"
                 onClick={() => onMoveSubtask(s.id, s.status === "done" ? "todo" : "done")}
+                whileTap={{ scale: 0.97 }}
                 className="flex flex-1 items-center gap-1.5 text-left"
                 style={{
                   color: s.status === "done" ? "var(--color-text-muted)" : "var(--color-text)",
                   textDecoration: s.status === "done" ? "line-through" : "none",
                 }}
               >
-                <span
+                <motion.span
                   aria-hidden
+                  animate={{ scale: s.status === "done" ? 1.15 : 1 }}
+                  transition={spring.base}
                   className="h-2.5 w-2.5 shrink-0 rounded-full border"
                   style={{
                     borderColor: "var(--color-accent)",
@@ -105,7 +112,7 @@ function TaskCard({
                   }}
                 />
                 {s.title}
-              </button>
+              </motion.button>
             </li>
           ))}
         </ul>
@@ -131,13 +138,13 @@ function TaskCard({
           />
         </form>
       ) : (
-        <button
+        <SpringButton
           type="button"
           onClick={() => setAddingSubtask(true)}
           className="mt-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           + subtask
-        </button>
+        </SpringButton>
       )}
     </div>
   );
@@ -150,13 +157,13 @@ function AddDeadlineForm({ onAdd }: { onAdd: (title: string, dueAt: string) => v
 
   if (!open) {
     return (
-      <button
+      <SpringButton
         type="button"
         onClick={() => setOpen(true)}
         className="shrink-0 self-center rounded-[var(--radius-base)] border border-dashed border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         + Deadline
-      </button>
+      </SpringButton>
     );
   }
 
@@ -185,9 +192,9 @@ function AddDeadlineForm({ onAdd }: { onAdd: (title: string, dueAt: string) => v
         onChange={(e) => setDueAt(e.target.value)}
         className="bg-transparent text-sm focus:outline-none"
       />
-      <button type="submit" className="text-sm" style={{ color: "var(--color-accent)" }}>
+      <SpringButton type="submit" className="text-sm" style={{ color: "var(--color-accent)" }}>
         Add
-      </button>
+      </SpringButton>
     </form>
   );
 }
@@ -214,6 +221,7 @@ function QuickAdd({ onAdd }: { onAdd: (title: string) => void }) {
 }
 
 export function PlannerView({ userId, discipline }: { userId: string; discipline: Discipline }) {
+  const spring = useSpring();
   const { data: tasks, isLoading } = useTasks(userId, discipline);
   const { data: deadlines } = useDeadlines(userId);
   const createTask = useCreateTask(userId, discipline);
@@ -229,18 +237,24 @@ export function PlannerView({ userId, discipline }: { userId: string; discipline
         </h1>
         <div className="flex gap-1 rounded-[var(--radius-base)] border border-[var(--color-border)] p-0.5 text-sm">
           {(["kanban", "list", "calendar"] as const).map((v) => (
-            <button
+            <motion.button
               key={v}
               type="button"
               onClick={() => setView(v)}
-              className="rounded-sm px-3 py-1 capitalize"
-              style={{
-                background: view === v ? "var(--color-accent)" : "transparent",
-                color: view === v ? "#fff" : "var(--color-text-muted)",
-              }}
+              whileTap={{ scale: 0.94 }}
+              className="relative rounded-sm px-3 py-1 capitalize"
+              style={{ color: view === v ? "#fff" : "var(--color-text-muted)" }}
             >
+              {view === v && (
+                <motion.span
+                  layoutId="planner-view-indicator"
+                  className="absolute inset-0 rounded-sm"
+                  style={{ background: "var(--color-accent)", zIndex: -1 }}
+                  transition={spring.base}
+                />
+              )}
               {v}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>

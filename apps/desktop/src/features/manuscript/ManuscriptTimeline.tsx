@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useBinder } from "../binder/api";
+import { SpringButton } from "../../components/SpringButton";
 import { usePageRevisions, useRestoreRevision } from "./api";
 import type { Block } from "@the-desk/shared";
 
@@ -49,7 +50,7 @@ function PageTimeline({ pageId, currentContent }: { pageId: string; currentConte
               <div className="rounded-[var(--radius-base)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-[var(--color-text-muted)]">{relativeTime(rev.createdAt)}</p>
-                  <button
+                  <SpringButton
                     type="button"
                     onClick={() => {
                       restore.mutate(rev.id);
@@ -59,7 +60,7 @@ function PageTimeline({ pageId, currentContent }: { pageId: string; currentConte
                     style={{ color: "var(--color-accent)" }}
                   >
                     {restoredId === rev.id && restore.isPending ? "Restoring…" : "Rewind to here"}
-                  </button>
+                  </SpringButton>
                 </div>
                 <p className="mt-1 text-sm text-[var(--color-text)]">{excerpt(rev.content)}</p>
               </div>
@@ -99,10 +100,11 @@ export function ManuscriptTimeline({ binderId }: { binderId: string }) {
 
       <div className="flex flex-wrap gap-2">
         {pages.map((p) => (
-          <button
+          <SpringButton
             key={p.id}
             type="button"
             onClick={() => setSelectedPageId(p.id)}
+            whileTap={{ scale: 0.95 }}
             className="rounded-full border px-3 py-1 text-sm"
             style={{
               borderColor: p.id === selectedPage?.id ? "var(--color-accent)" : "var(--color-border)",
@@ -110,7 +112,7 @@ export function ManuscriptTimeline({ binderId }: { binderId: string }) {
             }}
           >
             {p.title}
-          </button>
+          </SpringButton>
         ))}
       </div>
 

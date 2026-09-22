@@ -4,6 +4,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "motion/react";
 import type { Discipline } from "@the-desk/shared";
+import { SpringButton } from "../../components/SpringButton";
 import { useSpring } from "../../hooks/useSpring";
 import {
   useAddAnnotation,
@@ -120,22 +121,23 @@ export function BinderView({
         </div>
         <div className="flex items-center gap-4">
           {dueCards && dueCards.length > 0 && (
-            <button
+            <SpringButton
               type="button"
               onClick={onOpenReview}
+              whileTap={{ scale: 0.95 }}
               className="rounded-full px-3 py-1 text-sm"
               style={{ background: "var(--color-accent)", color: "#fff" }}
             >
               Review · {dueCards.length} due
-            </button>
+            </SpringButton>
           )}
-          <button
+          <SpringButton
             type="button"
             onClick={() => goTo(0)}
             className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
           >
             Contents
-          </button>
+          </SpringButton>
         </div>
       </div>
 
@@ -217,13 +219,13 @@ function AddPageInline({ onAdd }: { onAdd: (title: string) => void }) {
 
   if (!open) {
     return (
-      <button
+      <SpringButton
         type="button"
         onClick={() => setOpen(true)}
         className="mt-1 self-start text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       >
         + Add page
-      </button>
+      </SpringButton>
     );
   }
 
@@ -284,13 +286,14 @@ function SortableTocEntry({
       >
         ⠿
       </span>
-      <button
+      <SpringButton
         type="button"
         onClick={() => onSelect(page.id)}
+        whileTap={{ scale: 0.98 }}
         className="w-full py-2 text-left hover:text-[var(--color-accent)]"
       >
         {page.title}
-      </button>
+      </SpringButton>
     </motion.li>
   );
 }

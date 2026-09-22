@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
+import { SpringButton } from "./components/SpringButton";
 import { useSpring } from "./hooks/useSpring";
 import { useDisciplineStore } from "./store/useDisciplineStore";
 import { useAuthStore } from "./store/useAuthStore";
@@ -117,9 +118,13 @@ function Desk({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex items-center gap-5 border-b border-[var(--color-border)] px-4 py-2 text-sm">
-        <button type="button" onClick={onSwitchDiscipline} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
+        <SpringButton
+          type="button"
+          onClick={onSwitchDiscipline}
+          className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
           The Desk
-        </button>
+        </SpringButton>
         <span className="text-[var(--color-border)]">/</span>
         {navTabs.map((m) => (
           <motion.button
@@ -158,13 +163,13 @@ function Desk({
             )}
           </motion.button>
         ))}
-        <button
+        <SpringButton
           type="button"
           onClick={onLogOut}
           className="ml-auto text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         >
           Log out
-        </button>
+        </SpringButton>
       </div>
 
       <div className="flex-1">
