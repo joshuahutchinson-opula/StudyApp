@@ -72,6 +72,27 @@ model User {
   graphEdges       GraphEdge[]
   caseAttempts     CaseAttempt[]
   citations        Citation[]
+  syncDocs         SyncDoc[]
+}
+
+// Offline-first CRDT sync (Tier 3 of the 3D pivot): the merged Yjs binary
+// state for one synced document, keyed per (user, docKey). The server
+// merges an incoming update into whatever's already stored via Y.applyUpdate
+// rather than overwriting — two devices that edited the same doc while
+// offline converge on reconnect instead of one clobbering the other. That
+// merge happens in the sync route (src/routes/sync.ts), not here; this
+// table is just the durable home for the resulting bytes.
+model SyncDoc {
+  id        String   @id @default(uuid())
+  userId    String
+  docKey    String
+  state     Bytes
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, docKey])
 }
 
 // A bound note collection: spine, cover, pages — not a scrolling document.

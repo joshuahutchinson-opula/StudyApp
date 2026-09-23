@@ -21,6 +21,10 @@ interface CameraStore {
    * ("its own history stack as part of the universal undo system"). Tier 3
    * folds this into the app-wide undo manager; until then it stands alone. */
   history: CameraHistoryEntry[];
+  /** Timestamp of the last history-pushing action — read by the Tier 3
+   * global undo router (undoRouter.ts) to decide whether a Ctrl+Z should
+   * undo camera navigation or a task edit, whichever happened more recently. */
+  lastActionAt: number | null;
   goToPlanner: () => void;
   goToBinder: (binderId: string) => void;
   goToWhiteboard: () => void;
@@ -37,6 +41,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
   binderId: null,
   overlay: null,
   history: [],
+  lastActionAt: null,
 
   goToPlanner: () => {
     const { state, binderId, history } = get();
@@ -46,6 +51,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
       binderId: null,
       overlay: null,
       history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
     });
   },
 
@@ -57,6 +63,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
       binderId: id,
       overlay: null,
       history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
     });
   },
 
@@ -68,6 +75,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
       binderId: null,
       overlay: null,
       history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
     });
   },
 
@@ -89,6 +97,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
       binderId: null,
       overlay: null,
       history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
     });
   },
 
@@ -105,6 +114,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
       returning: true,
       overlay: null,
       history: history.slice(0, -1),
+      lastActionAt: Date.now(),
     });
   },
 }));

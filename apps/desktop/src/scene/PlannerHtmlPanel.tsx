@@ -1,7 +1,6 @@
 import { Html } from "@react-three/drei";
-import { useMemo } from "react";
-import type { Discipline } from "@the-desk/shared";
-import { useTasks, useUpdateTaskStatus } from "../features/planner/api";
+import { useState } from "react";
+import { useSyncedTasks } from "./useYDoc";
 
 /**
  * The planner's task list rendered as a real DOM layer anchored IN the 3D
@@ -11,19 +10,26 @@ import { useTasks, useUpdateTaskStatus } from "../features/planner/api";
  * mounted while PLANNER_FOCUS is active (see DeskScene) — real interactive
  * DOM content sitting tiny/occluded in the idle-wide view would be both
  * unreadable and a stray hit-test target.
+ *
+ * Tier 3: task data is now CRDT-backed (see useYDoc.ts) instead of a plain
+ * REST resource — offline-first via IndexedDB, merges across devices via
+ * the backend sync route, and undoable via the global undo router.
  */
 export function PlannerHtmlPanel({
   userId,
-  discipline,
   position,
 }: {
   userId: string;
-  discipline: Discipline;
   position: readonly [number, number, number];
 }) {
-  const { data: tasks } = useTasks(userId, discipline);
-  const updateStatus = useUpdateTaskStatus(userId, discipline);
-  const visible = useMemo(() => (tasks ?? []).slice(0, 6), [tasks]);
+  const { tasks, addTask, toggleTask } = useSyncedTasks(userId);
+  const [draft, setDraft] = useState("");
+  const visible = tasks.slice(0, 6);
+
+  function submitDraft() {
+    addTask(draft);
+    setDraft("");
+  }
 
   return (
     <Html position={position} transform distanceFactor={1.1} style={{ pointerEvents: "none" }}>
@@ -58,16 +64,45 @@ export function PlannerHtmlPanel({
               opacity: t.status === "done" ? 0.55 : 1,
             }}
           >
-            <input
-              type="checkbox"
-              checked={t.status === "done"}
-              onChange={() =>
-                updateStatus.mutate({ taskId: t.id, status: t.status === "done" ? "todo" : "done" })
-              }
-            />
+            <input type="checkbox" checked={t.status === "done"} onChange={() => toggleTask(t.id)} />
             {t.title}
           </label>
         ))}
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <input
+            type="text"
+            value={draft}
+            placeholder="Add a task…"
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitDraft();
+            }}
+            style={{
+              flex: 1,
+              fontSize: 13,
+              padding: "6px 8px",
+              borderRadius: 4,
+              border: "1px solid #d8cdb8",
+              background: "#fffdf8",
+              color: "#1d2b33",
+            }}
+          />
+          <button
+            type="button"
+            onClick={submitDraft}
+            style={{
+              fontSize: 13,
+              padding: "6px 12px",
+              borderRadius: 4,
+              border: "none",
+              background: "#2d7d8e",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Add
+          </button>
+        </div>
       </div>
     </Html>
   );

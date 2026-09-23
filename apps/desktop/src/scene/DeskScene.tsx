@@ -8,6 +8,7 @@ import { OBJECT_LAYOUT } from "./cameraStates";
 import { useCameraStore } from "./useCameraStore";
 import { TimerObject } from "./TimerObject";
 import { PlannerHtmlPanel } from "./PlannerHtmlPanel";
+import { globalUndo, registerUndoSource } from "./undoRouter";
 
 // Both overlays are large (tldraw alone is ~700KB+ gzipped) and only ever
 // needed once a user actually approaches that object — code-split them so
@@ -98,7 +99,7 @@ function LampMarker() {
   );
 }
 
-function SceneObjects({ userId, discipline, binderId }: { userId: string; discipline: Discipline; binderId: string }) {
+function SceneObjects({ userId, binderId }: { userId: string; binderId: string }) {
   const goToBinder = useCameraStore((s) => s.goToBinder);
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
@@ -130,7 +131,6 @@ function SceneObjects({ userId, discipline, binderId }: { userId: string; discip
       {state === "PLANNER_FOCUS" && (
         <PlannerHtmlPanel
           userId={userId}
-          discipline={discipline}
           position={[OBJECT_LAYOUT.planner.x, OBJECT_LAYOUT.planner.y + 0.02, OBJECT_LAYOUT.planner.z - 0.3]}
         />
       )}
@@ -164,13 +164,36 @@ export function DeskScene({
   const { data: binders } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
 
+  // Register the camera FSM's own undo stack with the Tier 3 global undo
+  // router, so Ctrl+Z can route to "undo the last camera move" or "undo the
+  // last task edit" — whichever happened more recently — instead of only
+  // ever undoing one or the other.
+  useEffect(() => {
+    return registerUndoSource("camera", {
+      canUndo: () => useCameraStore.getState().history.length > 0,
+      undo: () => useCameraStore.getState().undo(),
+      lastActionAt: () => useCameraStore.getState().lastActionAt ?? -Infinity,
+    });
+  }, []);
+
   // Escape always backs out one step — mirrors the "misclick should be
   // undo-able" requirement without waiting for the full Tier 3 undo system.
+  // Ctrl/Cmd+Z routes through the global undo router instead, EXCEPT while
+  // an overlay (binder/whiteboard) is open — those own their own undo (e.g.
+  // tldraw's native Ctrl+Z for drawing), and a global desk-level undo
+  // hijacking that would be surprising.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         if (overlay) closeOverlay();
         else if (state !== "IDLE_WIDE") undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !overlay) {
+        const target = e.target as HTMLElement | null;
+        if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+        e.preventDefault();
+        globalUndo();
       }
     }
     window.addEventListener("keydown", onKeyDown);
@@ -202,7 +225,7 @@ export function DeskScene({
             real HDRI is added, wrap it alone in its own
             `<Suspense fallback={null}>` so a slow network fetch degrades to
             "no reflections yet," never to "the whole desk vanished." */}
-        <SceneObjects userId={userId} discipline={discipline} binderId={binder?.id ?? ""} />
+        <SceneObjects userId={userId} binderId={binder?.id ?? ""} />
       </Canvas>
 
       <div
