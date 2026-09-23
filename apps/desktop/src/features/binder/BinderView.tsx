@@ -17,6 +17,7 @@ import {
 } from "./api";
 import { useDueCards } from "../review/api";
 import { useCitations } from "../citations/api";
+import { CitationLibrary } from "../citations/CitationLibrary";
 import { PageTurn } from "./PageTurn";
 import { PageContent } from "./PageContent";
 import { TabRail } from "./TabRail";
@@ -111,6 +112,24 @@ export function BinderView({
     reorderPages.mutate(fullOrder);
   }
 
+  // Tier 4's citation drag-insert: a citation card dropped onto a block
+  // (id `block:<blockId>`, from PageContent's BlockDropZone) inserts a new
+  // citationRef block right after that block, reusing the existing
+  // content-update mutation — same path a manual edit would take.
+  function handleCitationDrop(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || !currentPage) return;
+    const overId = String(over.id);
+    if (!overId.startsWith("block:")) return;
+    const blockId = overId.slice("block:".length);
+    const idx = currentPage.content.findIndex((b) => b.id === blockId);
+    if (idx === -1) return;
+    const newBlock = { id: crypto.randomUUID(), kind: "citationRef" as const, citationId: String(active.id) };
+    const nextContent = [...currentPage.content];
+    nextContent.splice(idx + 1, 0, newBlock);
+    updateContent.mutate({ pageId: currentPage.id, content: nextContent });
+  }
+
   const pageKey = current.type === "toc" ? "toc" : current.pageId;
 
   return (
@@ -146,6 +165,13 @@ export function BinderView({
         </div>
       </div>
 
+      {/* One DndContext for the whole row: citation drag-insert (drag a
+          card from the sidebar onto a block) lives here, alongside the TOC's
+          own reorder DndContext nested inside TableOfContents below — the two
+          never coexist since the sidebar (draggables) only renders in page
+          view, and blocks (droppables) only render in page view too, so
+          there's nothing for this outer context to do while TOC is showing. */}
+      <DndContext onDragEnd={handleCitationDrop}>
       <div className="flex flex-1 gap-[var(--space-4)] px-[var(--space-4)] py-[var(--space-4)]">
         <TabRail
           tabDividers={binder.tabDividers}
@@ -192,6 +218,7 @@ export function BinderView({
                 blocks={currentPage.content}
                 citations={citations}
                 annotations={currentPage.annotations}
+                dropEnabled
                 onAddAnnotation={(anchorBlockId, body) =>
                   addAnnotation.mutate({ pageId: currentPage.id, anchorBlockId, body })
                 }
@@ -207,7 +234,17 @@ export function BinderView({
             </div>
           ) : null}
         </PageTurn>
+
+        {/* Drag a citation onto a block in the page to the left to insert a
+            citationRef there — this is also CitationLibrary's first live
+            mount point (it was built earlier but had no reachable UI). */}
+        {current.type === "page" && (
+          <div style={{ width: 280, flexShrink: 0, overflow: "auto" }}>
+            <CitationLibrary userId={userId} discipline={discipline} />
+          </div>
+        )}
       </div>
+      </DndContext>
 
       <ThumbnailStrip
         pages={pages}

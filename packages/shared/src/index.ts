@@ -9,3 +9,4 @@ export * from "./citation.js";
 export * from "./demo.js";
 export * from "./microcopy.js";
 export * from "./coAnnotator.js";
+export * from "./textbook.js";

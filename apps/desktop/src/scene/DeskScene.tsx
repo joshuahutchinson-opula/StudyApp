@@ -8,16 +8,18 @@ import { OBJECT_LAYOUT } from "./cameraStates";
 import { useCameraStore } from "./useCameraStore";
 import { TimerObject } from "./TimerObject";
 import { PlannerHtmlPanel } from "./PlannerHtmlPanel";
+import { ExamDrawerPanel } from "./ExamDrawerPanel";
 import { globalUndo, registerUndoSource } from "./undoRouter";
+import { useExamMode } from "../hooks/useExamMode";
 
-// Both overlays are large (tldraw alone is ~700KB+ gzipped) and only ever
-// needed once a user actually approaches that object — code-split them so
-// neither ships in the initial bundle, same pattern the old dashboard used
-// for Cytoscape (GraphView). The camera has already settled by the time
-// either of these starts fetching, so the brief lag reads as "the reader is
-// opening," not as a stall.
+// All full-screen overlays are code-split — neither ships in the initial
+// bundle, same pattern the old dashboard used for Cytoscape (GraphView). The
+// camera has already settled by the time any of these starts fetching, so
+// the brief lag reads as "the reader is opening," not as a stall.
 const BinderOverlay = lazy(() => import("./BinderOverlay").then((m) => ({ default: m.BinderOverlay })));
 const WhiteboardOverlay = lazy(() => import("./WhiteboardOverlay").then((m) => ({ default: m.WhiteboardOverlay })));
+const RecallOverlay = lazy(() => import("./RecallOverlay").then((m) => ({ default: m.RecallOverlay })));
+const TextbookOverlay = lazy(() => import("./TextbookOverlay").then((m) => ({ default: m.TextbookOverlay })));
 
 // Tier 1 established the camera FSM against placeholder geometry. Tier 2
 // (this file) swaps the overlay placeholders for the real binder reader and
@@ -64,6 +66,41 @@ function InteractiveBox({
   );
 }
 
+// The exam-mode drawer — built into the desk itself rather than a free
+// object, so it gets its own component instead of reusing InteractiveBox:
+// it needs an emissive tint that responds to useExamMode()'s active state
+// (a faint warm glow when something's due soon), which no other desk object
+// does.
+function DrawerFront({ position, active, onSelect }: { position: readonly [number, number, number]; active: boolean; onSelect: () => void }) {
+  return (
+    <mesh
+      position={position}
+      castShadow
+      receiveShadow
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = "auto";
+      }}
+    >
+      <boxGeometry args={[1.0, 0.28, 0.06]} />
+      <meshStandardMaterial
+        color="#3d3226"
+        emissive={active ? "#c1432c" : "#000000"}
+        emissiveIntensity={active ? 0.35 : 0}
+        roughness={0.7}
+        metalness={0.05}
+      />
+    </mesh>
+  );
+}
+
 function DeskAndWall() {
   return (
     <>
@@ -103,7 +140,11 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
   const goToBinder = useCameraStore((s) => s.goToBinder);
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
+  const goToRecall = useCameraStore((s) => s.goToRecall);
+  const goToTextbook = useCameraStore((s) => s.goToTextbook);
+  const goToDrawer = useCameraStore((s) => s.goToDrawer);
   const state = useCameraStore((s) => s.state);
+  const examMode = useExamMode(userId);
 
   return (
     <>
@@ -144,6 +185,34 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       />
 
       <TimerObject userId={userId} position={[OBJECT_LAYOUT.timer.x, OBJECT_LAYOUT.timer.y, OBJECT_LAYOUT.timer.z]} />
+
+      <InteractiveBox
+        position={[OBJECT_LAYOUT.recall.x, OBJECT_LAYOUT.recall.y, OBJECT_LAYOUT.recall.z]}
+        size={[0.3, 0.08, 0.22]}
+        color="#d97757"
+        label="recall"
+        onSelect={goToRecall}
+      />
+
+      <InteractiveBox
+        position={[OBJECT_LAYOUT.textbook.x, OBJECT_LAYOUT.textbook.y, OBJECT_LAYOUT.textbook.z]}
+        size={[0.28, 0.36, 0.09]}
+        color="#7a2e2e"
+        label="textbook"
+        onSelect={goToTextbook}
+      />
+
+      <DrawerFront
+        position={[OBJECT_LAYOUT.drawer.x, OBJECT_LAYOUT.drawer.y, OBJECT_LAYOUT.drawer.z]}
+        active={examMode.active}
+        onSelect={goToDrawer}
+      />
+      {state === "DRAWER_FOCUS" && (
+        <ExamDrawerPanel
+          userId={userId}
+          position={[OBJECT_LAYOUT.drawer.x, OBJECT_LAYOUT.drawer.y + 0.3, OBJECT_LAYOUT.drawer.z - 0.2]}
+        />
+      )}
     </>
   );
 }
@@ -281,6 +350,12 @@ export function DeskScene({
             )}
             {overlay === "whiteboard" && (
               <WhiteboardOverlay key="whiteboard" userId={userId} onClose={closeOverlay} />
+            )}
+            {overlay === "recall" && (
+              <RecallOverlay key="recall" userId={userId} discipline={discipline} onClose={closeOverlay} />
+            )}
+            {overlay === "textbook" && (
+              <TextbookOverlay key="textbook" userId={userId} discipline={discipline} onClose={closeOverlay} />
             )}
           </Suspense>
         )}

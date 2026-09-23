@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { CameraStateId } from "./cameraStates";
 
-export type OverlayId = "binder" | "whiteboard" | null;
+export type OverlayId = "binder" | "whiteboard" | "recall" | "textbook" | null;
 
 interface CameraHistoryEntry {
   state: CameraStateId;
@@ -28,6 +28,9 @@ interface CameraStore {
   goToPlanner: () => void;
   goToBinder: (binderId: string) => void;
   goToWhiteboard: () => void;
+  goToRecall: () => void;
+  goToTextbook: () => void;
+  goToDrawer: () => void;
   settleOverlay: () => void;
   closeOverlay: () => void;
   undo: () => void;
@@ -79,12 +82,52 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     });
   },
 
+  goToRecall: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "RECALL_APPROACH",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
+  goToTextbook: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "TEXTBOOK_APPROACH",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
+  // DRAWER_FOCUS is a PLANNER_FOCUS-style non-overlay state — no settleOverlay
+  // handoff, an Html panel just renders once this state is active.
+  goToDrawer: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "DRAWER_FOCUS",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
   // Fired by CameraRig once an approach state's camera has actually settled
   // at its target — the one-way/self-terminating handoff into the 2D overlay.
   settleOverlay: () => {
     const { state } = get();
     if (state === "BINDER_APPROACH") set({ overlay: "binder" });
     else if (state === "WHITEBOARD_APPROACH") set({ overlay: "whiteboard" });
+    else if (state === "RECALL_APPROACH") set({ overlay: "recall" });
+    else if (state === "TEXTBOOK_APPROACH") set({ overlay: "textbook" });
   },
 
   // Closing an overlay (or clicking away) reverses to IDLE_WIDE, faster than

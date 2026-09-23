@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
+import { useDroppable } from "@dnd-kit/core";
 import type { Block, MarginAnnotation } from "@the-desk/shared";
 import { RunnableCode } from "./RunnableCode";
 import type { CitationWithFormatted } from "../citations/types";
@@ -99,34 +100,61 @@ function renderBlock(
   }
 }
 
+// Tier 4's "citation drag-insert" drop target — one per block, id
+// `block:<blockId>` so BinderView's onDragEnd can tell a citation card was
+// dropped ON something (as opposed to a reorder drag elsewhere). Only used
+// when `dropEnabled` — a read-only viewer (Recall, the textbook) has no
+// content to insert into, so it skips this wrapper entirely.
+function BlockDropZone({ blockId, children }: { blockId: string; children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `block:${blockId}` });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        outline: isOver ? "2px dashed var(--color-accent)" : "2px dashed transparent",
+        borderRadius: "var(--radius-sm)",
+        transition: "outline-color 120ms",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function PageContent({
   blocks,
   citations = [],
   annotations = [],
+  dropEnabled = false,
   onAddAnnotation,
   onEditText,
 }: {
   blocks: Block[];
   citations?: CitationWithFormatted[];
   annotations?: MarginAnnotation[];
+  /** Enables per-block drop targets for citation drag-insert (BinderView only). */
+  dropEnabled?: boolean;
   onAddAnnotation?: (blockId: string, body: string) => void;
   onEditText?: (blockId: string, text: string) => void;
 }) {
   return (
     <div className="grid gap-x-[var(--space-5)] gap-y-[var(--space-4)]" style={{ gridTemplateColumns: "1fr 180px" }}>
-      {blocks.map((block) => (
-        <div key={block.id} className="contents">
-          <div>{renderBlock(block, citations, onEditText)}</div>
-          <div>
-            {onAddAnnotation && (
-              <MarginNote
-                annotations={annotations.filter((a) => a.anchorBlockId === block.id)}
-                onAdd={(body) => onAddAnnotation(block.id, body)}
-              />
-            )}
+      {blocks.map((block) => {
+        const rendered = renderBlock(block, citations, onEditText);
+        return (
+          <div key={block.id} className="contents">
+            <div>{dropEnabled ? <BlockDropZone blockId={block.id}>{rendered}</BlockDropZone> : rendered}</div>
+            <div>
+              {onAddAnnotation && (
+                <MarginNote
+                  annotations={annotations.filter((a) => a.anchorBlockId === block.id)}
+                  onAdd={(body) => onAddAnnotation(block.id, body)}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -95,6 +95,36 @@ model SyncDoc {
   @@unique([userId, docKey])
 }
 
+// Tier 4's "textbook-as-object": read-only reference material, one per
+// discipline, distinct from a user's own Binder (their notes). Shared
+// across all users of a discipline rather than owned by one — no userId,
+// same pattern as ClinicalCase.
+model Textbook {
+  id         String     @id @default(uuid())
+  discipline Discipline
+  title      String
+  author     String
+  createdAt  DateTime   @default(now())
+
+  chapters TextbookChapter[]
+
+  @@index([discipline])
+}
+
+model TextbookChapter {
+  id         String   @id @default(uuid())
+  textbookId String
+  textbook   Textbook @relation(fields: [textbookId], references: [id], onDelete: Cascade)
+  title      String
+  order      Int
+  // Block[] (see @the-desk/shared BlockSchema), same shape as Page.content —
+  // read-only here, but "file to binder" (Tier 4) copies it into a real,
+  // editable Page.
+  content    Json     @default("[]")
+
+  @@index([textbookId])
+}
+
 // A bound note collection: spine, cover, pages — not a scrolling document.
 model Binder {
   id         String     @id @default(uuid())

@@ -796,6 +796,216 @@ async function seedArts() {
   console.log(`Seeded demo Arts binder ${binder.id} for user ${DEMO_USER_ID}`);
 }
 
+// Tier 4's "textbook-as-object": shared, read-only reference material (not
+// user-owned, so no `existing`-per-user guard — guard on discipline instead
+// so re-running the seed doesn't duplicate it).
+async function seedTextbooks() {
+  const textbooks: {
+    discipline: "medicine" | "software" | "writing" | "engineering" | "arts";
+    title: string;
+    author: string;
+    chapters: { title: string; content: (ReturnType<typeof heading> | ReturnType<typeof paragraph> | ReturnType<typeof list>)[] }[];
+  }[] = [
+    {
+      discipline: "medicine",
+      title: "Fundamentals of Clinical Reasoning",
+      author: "R. Okafor, MD",
+      chapters: [
+        {
+          title: "The Hypothetico-Deductive Method",
+          content: [
+            heading(1, "The Hypothetico-Deductive Method"),
+            paragraph(
+              "Expert clinicians don't work through an exhaustive checklist — they generate a short list of candidate diagnoses within seconds of hearing the chief complaint, then use targeted history and exam findings to confirm or eliminate each one.",
+            ),
+            list(false, [
+              "Generate hypotheses early, from the presenting complaint and demographics alone",
+              "Each subsequent question should discriminate between hypotheses, not just gather data",
+              "Revise the list as findings arrive — don't anchor on the first hypothesis",
+            ]),
+            paragraph(
+              "This is faster than exhaustive data-gathering, but it carries a real cost: premature closure, where a clinician stops generating hypotheses too early and misses a diagnosis that was never on the list.",
+            ),
+          ],
+        },
+        {
+          title: "Pretest Probability and Bayesian Reasoning",
+          content: [
+            heading(1, "Pretest Probability and Bayesian Reasoning"),
+            paragraph(
+              "A test result is only as informative as the prior probability it's updating. The same positive D-dimer means something very different in a 25-year-old with no risk factors versus a 70-year-old post-surgical patient with leg swelling.",
+            ),
+            list(false, [
+              "Pretest probability comes from prevalence, risk factors, and clinical gestalt",
+              "A test's likelihood ratio tells you how much it should move that probability",
+              "High-sensitivity tests are best for ruling OUT disease when negative; high-specificity tests are best for ruling IN disease when positive",
+            ]),
+          ],
+        },
+      ],
+    },
+    {
+      discipline: "software",
+      title: "Foundations of Systems Design",
+      author: "M. Bergström",
+      chapters: [
+        {
+          title: "The CAP Theorem",
+          content: [
+            heading(1, "The CAP Theorem"),
+            paragraph(
+              "In a distributed system, you cannot simultaneously guarantee Consistency, Availability, and Partition tolerance — a network partition is a physical inevitability, not a design choice, so the real tradeoff is between C and A once one occurs.",
+            ),
+            list(false, [
+              "CP systems refuse requests during a partition rather than risk stale/conflicting reads",
+              "AP systems keep serving requests during a partition and reconcile divergent state afterward",
+              "Most real systems are neither purely CP nor AP — they choose per-operation",
+            ]),
+          ],
+        },
+        {
+          title: "Idempotency in Distributed Systems",
+          content: [
+            heading(1, "Idempotency in Distributed Systems"),
+            paragraph(
+              "A network call can fail after the server processed it but before the client got the response — the client can't tell success from failure, so it must be safe to retry. An idempotent operation produces the same result no matter how many times it's applied.",
+            ),
+            list(true, [
+              "Assign a client-generated idempotency key to each logical operation",
+              "The server stores the key with the result of the first execution",
+              "A retried request with the same key returns the stored result instead of re-executing",
+            ]),
+          ],
+        },
+      ],
+    },
+    {
+      discipline: "writing",
+      title: "The Elements of Narrative Nonfiction",
+      author: "C. Devereux",
+      chapters: [
+        {
+          title: "Scene vs. Summary",
+          content: [
+            heading(1, "Scene vs. Summary"),
+            paragraph(
+              "Scene renders a moment in real time — dialogue, action, sensory detail — and slows the reader down to live inside it. Summary compresses time, telling the reader what happened across days or years in a sentence.",
+            ),
+            list(false, [
+              "Use scene for the moments that carry the emotional weight of the piece",
+              "Use summary for the connective tissue between scenes — nobody needs a scene for 'six months passed'",
+              "A piece that's all scene exhausts the reader; a piece that's all summary never lets them in",
+            ]),
+          ],
+        },
+        {
+          title: "The Reporter's Notebook",
+          content: [
+            heading(1, "The Reporter's Notebook"),
+            paragraph(
+              "Good scene-writing in nonfiction is downstream of good reporting — you can't render a moment you didn't get the details for. That means asking sources for the small physical facts, not just their opinions.",
+            ),
+            list(false, [
+              "Ask what a room looked like, not just what was decided in it",
+              "Get exact quotes, not paraphrases — the rhythm of real speech is unreproducible from memory",
+              "Follow up on the detail that surprised you; it's usually the one the reader needs too",
+            ]),
+          ],
+        },
+      ],
+    },
+    {
+      discipline: "engineering",
+      title: "Principles of Structural Design",
+      author: "T. Nakamura, PE",
+      chapters: [
+        {
+          title: "Factor of Safety",
+          content: [
+            heading(1, "Factor of Safety"),
+            paragraph(
+              "A structure is never designed to carry exactly its expected load — it's designed to carry some multiple of it, to absorb material variability, load estimation error, and degradation over time.",
+            ),
+            list(false, [
+              "Factor of safety = failure load / expected service load",
+              "Codes specify minimum factors per material and load type rather than leaving it to judgment",
+              "A higher factor of safety isn't free — it costs material, weight, and money, so it's chosen, not maximized",
+            ]),
+          ],
+        },
+        {
+          title: "Load Paths",
+          content: [
+            heading(1, "Load Paths"),
+            paragraph(
+              "Every load applied to a structure — dead, live, wind, seismic — must have a continuous path of members carrying it down to the foundation. A load path with a gap doesn't reduce the load; it just means something undesigned is carrying it.",
+            ),
+            list(false, [
+              "Trace the path from the point of load application to the ground before trusting any single member's calculation",
+              "A discontinuous load path is a common root cause of progressive collapse",
+              "Redundant load paths let a structure redistribute load if one member is damaged",
+            ]),
+          ],
+        },
+      ],
+    },
+    {
+      discipline: "arts",
+      title: "Critical Approaches to Studio Practice",
+      author: "L. Feldman",
+      chapters: [
+        {
+          title: "Formalism vs. Contextualism",
+          content: [
+            heading(1, "Formalism vs. Contextualism"),
+            paragraph(
+              "A formalist critique evaluates a work on its internal visual relationships — composition, color, line, scale — treating it as a self-contained object. A contextualist critique reads the work through the circumstances of its making: the artist's biography, the historical moment, the intended audience.",
+            ),
+            list(false, [
+              "Neither approach is complete on its own — pure formalism can miss why a work matters, pure contextualism can excuse weak formal decisions",
+              "Strong critique moves between both registers deliberately, not by default",
+            ]),
+          ],
+        },
+        {
+          title: "The Critique as Method",
+          content: [
+            heading(1, "The Critique as Method"),
+            paragraph(
+              "A group critique isn't a verdict — it's a way of finding out what a piece is actually doing, which is often different from what the artist intended. The artist's job during critique is to listen for patterns across responses, not to defend the work.",
+            ),
+            list(false, [
+              "One person's reaction is a data point; three people noticing the same thing is a pattern",
+              "Defensive responses shut down the information critique exists to surface",
+              "The most useful note is often the one that names something you already suspected but hadn't said out loud",
+            ]),
+          ],
+        },
+      ],
+    },
+  ];
+
+  for (const tb of textbooks) {
+    const existing = await db.textbook.findFirst({ where: { discipline: tb.discipline } });
+    if (existing) {
+      console.log(`Textbook for ${tb.discipline} already exists, skipping seed.`);
+      continue;
+    }
+    const created = await db.textbook.create({
+      data: { discipline: tb.discipline, title: tb.title, author: tb.author },
+    });
+    await db.textbookChapter.createMany({
+      data: tb.chapters.map((ch, i) => ({
+        textbookId: created.id,
+        title: ch.title,
+        order: i,
+        content: ch.content,
+      })),
+    });
+    console.log(`Seeded textbook "${tb.title}" (${tb.discipline})`);
+  }
+}
+
 async function main() {
   await db.user.upsert({
     where: { id: DEMO_USER_ID },
@@ -814,6 +1024,7 @@ async function main() {
   await seedWriting();
   await seedEngineering();
   await seedArts();
+  await seedTextbooks();
 }
 
 main()

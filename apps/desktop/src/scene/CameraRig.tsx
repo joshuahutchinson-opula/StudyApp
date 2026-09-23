@@ -83,7 +83,13 @@ export function CameraRig() {
 
     // One-way approach states self-terminate into their 2D overlay once the
     // camera has actually settled — not on a fixed timer, on real arrival.
-    if (!hasSettledForThisState.current && (state === "BINDER_APPROACH" || state === "WHITEBOARD_APPROACH")) {
+    if (
+      !hasSettledForThisState.current &&
+      (state === "BINDER_APPROACH" ||
+        state === "WHITEBOARD_APPROACH" ||
+        state === "RECALL_APPROACH" ||
+        state === "TEXTBOOK_APPROACH")
+    ) {
       const posDist = camera.position.distanceTo(new Vector3(target.position.x, target.position.y, target.position.z));
       const speed = posVel.current.length();
       if (posDist < SETTLE_DISTANCE && speed < SETTLE_SPEED) {

@@ -4,7 +4,14 @@
 // slower, more overshoot-prone feel than RETURN's snappier disengagement
 // ("animate faster... disengagement should feel snappier than settling in").
 
-export type CameraStateId = "IDLE_WIDE" | "PLANNER_FOCUS" | "BINDER_APPROACH" | "WHITEBOARD_APPROACH";
+export type CameraStateId =
+  | "IDLE_WIDE"
+  | "PLANNER_FOCUS"
+  | "BINDER_APPROACH"
+  | "WHITEBOARD_APPROACH"
+  | "RECALL_APPROACH"
+  | "TEXTBOOK_APPROACH"
+  | "DRAWER_FOCUS";
 // RETURN is not a distinct resting state — it's a transition tagged onto
 // whatever state IDLE_WIDE is reached through, so it can use its own (faster)
 // spring constants. See useCameraStore's `returnToIdle`.
@@ -55,6 +62,28 @@ export const CAMERA_TARGETS: Record<CameraStateId, CameraTarget> = {
     lookAt: { x: 0, y: 1.55, z: -2.1 },
     fov: 44,
   },
+  // Tier 4 additions. RECALL/TEXTBOOK follow BINDER_APPROACH's own delta
+  // pattern (camera = object + (0, 0.70, 1.35), lookAt = object + (0, 0.50,
+  // 0)) since both are desk-level objects approached the same way binder is.
+  RECALL_APPROACH: {
+    position: { x: 0.9, y: 1.14, z: 2.0 },
+    lookAt: { x: 0.9, y: 0.94, z: 0.65 },
+    fov: 38,
+  },
+  TEXTBOOK_APPROACH: {
+    position: { x: -1.1, y: 1.16, z: 1.95 },
+    lookAt: { x: -1.1, y: 0.96, z: 0.6 },
+    fov: 38,
+  },
+  // DRAWER_FOCUS mirrors PLANNER_FOCUS's non-overlay pattern (camera moves,
+  // an Html panel appears in-scene — no full-screen overlay) rather than
+  // BINDER_APPROACH's, since opening a drawer is a glance-and-close
+  // interaction, not a "sit down and read" one.
+  DRAWER_FOCUS: {
+    position: { x: 0, y: 0.75, z: 2.9 },
+    lookAt: { x: 0, y: -0.25, z: 1.4 },
+    fov: 42,
+  },
 };
 
 // Which desk objects live at which resting spots — placeholder geometry uses
@@ -68,4 +97,12 @@ export const OBJECT_LAYOUT = {
   whiteboard: { x: 0, y: 1.55, z: -2.15 },
   timer: { x: 1.3, y: 0.5, z: 0.1 },
   lamp: { x: -0.9, y: 0.95, z: 0.75 },
+  // Tier 4 additions — placeholder positions, same as every other object
+  // here, tuned by eye against the placeholder geometry rather than a design
+  // reference (none exists yet for these).
+  recall: { x: 0.9, y: 0.44, z: 0.65 },
+  textbook: { x: -1.1, y: 0.46, z: 0.6 },
+  // The drawer isn't a free object on the desk — it's built into the front
+  // edge of the desk itself, hanging below the desktop surface.
+  drawer: { x: 0, y: -0.18, z: 1.35 },
 } as const;

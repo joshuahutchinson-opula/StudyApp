@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { DISCIPLINE_DEFAULT_CITATION_STYLE, MICROCOPY, type Discipline } from "@the-desk/shared";
 import { SpringButton } from "../../components/SpringButton";
 import { useCitations, useCreateCitation, type NewCitationInput } from "./api";
+import type { CitationWithFormatted } from "./types";
 
 const STYLE_LABEL: Record<string, string> = {
   ama: "AMA",
@@ -108,6 +111,25 @@ function AddCitationForm({ onAdd }: { onAdd: (input: NewCitationInput) => void }
   );
 }
 
+// Tier 4's "citation drag-insert": each citation is a draggable source, meant
+// to be dropped onto a block in the page currently being read (see
+// BinderView's DndContext + PageContent's per-block droppable zones), which
+// inserts a real citationRef block right after the drop target.
+function DraggableCitationCard({ citation }: { citation: CitationWithFormatted }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: citation.id });
+  return (
+    <li
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1, cursor: "grab" }}
+      className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-4)] text-sm leading-relaxed"
+    >
+      {citation.formatted}
+    </li>
+  );
+}
+
 export function CitationLibrary({ userId, discipline }: { userId: string; discipline: Discipline }) {
   const { data: citations, isLoading } = useCitations(userId, discipline);
   const createCitation = useCreateCitation(userId, discipline);
@@ -130,12 +152,7 @@ export function CitationLibrary({ userId, discipline }: { userId: string; discip
       ) : (
         <ul className="flex flex-col gap-[var(--space-3)]">
           {citations?.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] p-[var(--space-4)] text-sm leading-relaxed"
-            >
-              {c.formatted}
-            </li>
+            <DraggableCitationCard key={c.id} citation={c} />
           ))}
           {citations?.length === 0 && (
             <p className="text-sm text-[var(--color-text-muted)]">{copy.emptyCitations}</p>
