@@ -1,28 +1,20 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { DISCIPLINES, type Discipline } from "@the-desk/shared";
 import { DISCIPLINE_META } from "@the-desk/ui";
-import { ExamModeIndicator } from "./components/ExamModeIndicator";
-import { SpringButton } from "./components/SpringButton";
 import { useSpring } from "./hooks/useSpring";
 import { useDisciplineStore } from "./store/useDisciplineStore";
 import { useAuthStore } from "./store/useAuthStore";
 import { LoginScreen } from "./features/auth/LoginScreen";
-import { MedicineHome } from "./features/home/MedicineHome";
-import { useBinders } from "./features/binder/api";
-import { BinderView } from "./features/binder/BinderView";
-import { ReviewSession } from "./features/review/ReviewSession";
-import { PlannerView } from "./features/planner/PlannerView";
-import { ClinicalCaseSim } from "./features/clinical/ClinicalCaseSim";
-import { CitationLibrary } from "./features/citations/CitationLibrary";
-import { FocusTimer } from "./features/focus/FocusTimer";
-import { SearchView } from "./features/search/SearchView";
-import { ManuscriptTimeline } from "./features/manuscript/ManuscriptTimeline";
-import { CritiqueRoom } from "./features/critique/CritiqueRoom";
+import { DeskScene } from "./scene/DeskScene";
 
-// Cytoscape is a large dependency — code-split so it's only fetched when a
-// student actually opens the graph tab, not on every app load.
-const GraphView = lazy(() => import("./features/graph/GraphView").then((m) => ({ default: m.GraphView })));
+// The 2D route-based dashboard (sidebar/topbar/tab-navigated feature
+// screens) is gone — see git history before this commit if you need it.
+// The app is now one persistent 3D scene (scene/DeskScene.tsx); every
+// feature is reached by interacting with a physical object in it, camera
+// state moves instead of routes. Discipline selection stays a lightweight
+// pre-scene step for now — material/prop-based discipline reskinning
+// in-scene is tier 5 of the build, not built yet.
 
 function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   const spring = useSpring();
@@ -76,190 +68,6 @@ function DisciplinePicker({ onSelect }: { onSelect: (d: Discipline) => void }) {
   );
 }
 
-type Mode =
-  | "home"
-  | "binder"
-  | "planner"
-  | "review"
-  | "cases"
-  | "graph"
-  | "citations"
-  | "focus"
-  | "search"
-  | "timeline"
-  | "critique";
-
-function Desk({
-  userId,
-  discipline,
-  onSwitchDiscipline,
-  onLogOut,
-}: {
-  userId: string;
-  discipline: Discipline;
-  onSwitchDiscipline: () => void;
-  onLogOut: () => void;
-}) {
-  const meta = DISCIPLINE_META[discipline];
-  const spring = useSpring();
-  const { data: binders, isLoading } = useBinders(userId);
-  const binder = binders?.find((b) => b.discipline === discipline);
-  const [mode, setMode] = useState<Mode>(discipline === "medicine" ? "home" : "binder");
-  const [binderTargetPageId, setBinderTargetPageId] = useState<string | undefined>(undefined);
-
-  if (isLoading) {
-    return <div className="p-10 text-sm text-[var(--color-text-muted)]">Loading…</div>;
-  }
-
-  // Signature features are discipline-specific, not part of the shared spine:
-  // "cases" (Medicine), "timeline" (Writing), "critique" (Arts). "home" is a
-  // Medicine-only illustrated landing screen — no equivalent design exists
-  // for the other four disciplines yet.
-  const baseTabs: Mode[] = ["binder", "planner", "graph", "search", "citations", "focus"];
-  const signatureTab: Mode | null =
-    discipline === "medicine" ? "cases" : discipline === "writing" ? "timeline" : discipline === "arts" ? "critique" : null;
-  const navTabs: Mode[] = signatureTab ? [...baseTabs, signatureTab] : baseTabs;
-  if (discipline === "medicine") navTabs.unshift("home");
-
-  return (
-    <div className="flex min-h-screen flex-col">
-      <div className="flex items-center gap-5 border-b border-[var(--color-border)] px-4 py-2 text-sm">
-        <SpringButton
-          type="button"
-          onClick={onSwitchDiscipline}
-          className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        >
-          The Desk
-        </SpringButton>
-        <span className="text-[var(--color-border)]">/</span>
-        {navTabs.map((m) => (
-          <motion.button
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            whileTap={{ scale: 0.94 }}
-            className="relative flex flex-col items-center gap-1.5 pb-1 capitalize"
-            style={{
-              color: mode === m ? "var(--color-text)" : "var(--color-text-muted)",
-              fontWeight: mode === m ? 600 : 400,
-            }}
-          >
-            {m === "home"
-              ? "Home"
-              : m === "cases"
-              ? "Clinical Cases"
-              : m === "graph"
-                ? "Graph"
-                : m === "citations"
-                  ? "Citations"
-                  : m === "focus"
-                    ? "Focus"
-                    : m === "search"
-                      ? "Search"
-                      : m === "timeline"
-                        ? "Timeline"
-                        : m === "critique"
-                          ? "Critique Room"
-                          : m}
-            {mode === m && (
-              <motion.span
-                layoutId="nav-indicator"
-                className="absolute -bottom-2 h-0.5 w-full rounded-full"
-                style={{ background: "var(--color-accent)" }}
-                transition={spring.base}
-              />
-            )}
-          </motion.button>
-        ))}
-        <div className="ml-auto flex items-center gap-[var(--space-3)]">
-          <ExamModeIndicator userId={userId} />
-          <SpringButton
-            type="button"
-            onClick={onLogOut}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-          >
-            Log out
-          </SpringButton>
-        </div>
-      </div>
-
-      <div className="flex-1">
-        {mode === "home" && (
-          <MedicineHome
-            userId={userId}
-            onOpenBinder={() => setMode("binder")}
-            onOpenReview={() => setMode("review")}
-          />
-        )}
-
-        {mode === "planner" && <PlannerView userId={userId} discipline={discipline} />}
-
-        {mode === "review" && (
-          <ReviewSession userId={userId} discipline={discipline} onExit={() => setMode("binder")} />
-        )}
-
-        {mode === "cases" && <ClinicalCaseSim userId={userId} />}
-
-        {mode === "timeline" && binder && <ManuscriptTimeline binderId={binder.id} />}
-
-        {mode === "critique" && binder && <CritiqueRoom binderId={binder.id} />}
-
-        {mode === "citations" && <CitationLibrary userId={userId} discipline={discipline} />}
-
-        {mode === "focus" && <FocusTimer userId={userId} />}
-
-        {mode === "graph" && (
-          <Suspense
-            fallback={<div className="p-10 text-sm text-[var(--color-text-muted)]">Loading graph…</div>}
-          >
-            <GraphView
-              userId={userId}
-              discipline={discipline}
-              onOpenNote={(pageId) => {
-                setBinderTargetPageId(pageId);
-                setMode("binder");
-              }}
-            />
-          </Suspense>
-        )}
-
-        {mode === "search" && (
-          <SearchView
-            userId={userId}
-            discipline={discipline}
-            onOpenPage={(pageId) => {
-              setBinderTargetPageId(pageId);
-              setMode("binder");
-            }}
-          />
-        )}
-
-        {mode === "binder" &&
-          (binder ? (
-            <BinderView
-              key={binderTargetPageId ?? "default"}
-              userId={userId}
-              binderId={binder.id}
-              discipline={discipline}
-              initialPageId={binderTargetPageId}
-              onOpenReview={() => setMode("review")}
-            />
-          ) : (
-            <div className="mx-auto flex max-w-2xl flex-col justify-center px-6 py-20">
-              <p className="mb-2 text-sm tracking-wide text-[var(--color-text-muted)]">{meta.label}</p>
-              <h1 className="text-3xl" style={{ fontFamily: "var(--font-display)" }}>
-                {meta.tagline}
-              </h1>
-              <p className="mt-8 text-sm text-[var(--color-text-muted)]">
-                No binder yet for this discipline — try Planner above, or switch to Medicine for the full binder.
-              </p>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
@@ -292,11 +100,8 @@ export default function App() {
   }
 
   return (
-    <Desk
-      userId={user.id}
-      discipline={activeDiscipline}
-      onSwitchDiscipline={() => useDisciplineStore.setState({ activeDiscipline: null })}
-      onLogOut={logOut}
-    />
+    <div style={{ width: "100vw", height: "100vh" }}>
+      <DeskScene onLogOut={logOut} />
+    </div>
   );
 }
