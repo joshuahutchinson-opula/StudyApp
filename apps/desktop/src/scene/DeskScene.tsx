@@ -1,16 +1,30 @@
 import { Canvas } from "@react-three/fiber";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect } from "react";
+import { AnimatePresence } from "motion/react";
+import { Suspense, lazy, useEffect } from "react";
+import type { Discipline } from "@the-desk/shared";
+import { useBinders } from "../features/binder/api";
 import { CameraRig } from "./CameraRig";
 import { OBJECT_LAYOUT } from "./cameraStates";
 import { useCameraStore } from "./useCameraStore";
+import { TimerObject } from "./TimerObject";
+import { PlannerHtmlPanel } from "./PlannerHtmlPanel";
 
-// Tier 1 (Foundation): the camera state machine working end-to-end against
-// placeholder primitive geometry, with the lighting/material architecture
-// established. Tier 2 swaps these boxes for real modeled geometry and PBR
-// materials, and swaps the placeholder overlay panels below for the real
-// binder reader / tldraw whiteboard — the camera FSM, spring physics, and
-// crossfade mechanism don't change when that happens.
+// Both overlays are large (tldraw alone is ~700KB+ gzipped) and only ever
+// needed once a user actually approaches that object — code-split them so
+// neither ships in the initial bundle, same pattern the old dashboard used
+// for Cytoscape (GraphView). The camera has already settled by the time
+// either of these starts fetching, so the brief lag reads as "the reader is
+// opening," not as a stall.
+const BinderOverlay = lazy(() => import("./BinderOverlay").then((m) => ({ default: m.BinderOverlay })));
+const WhiteboardOverlay = lazy(() => import("./WhiteboardOverlay").then((m) => ({ default: m.WhiteboardOverlay })));
+
+// Tier 1 established the camera FSM against placeholder geometry. Tier 2
+// (this file) swaps the overlay placeholders for the real binder reader and
+// tldraw whiteboard, gives the planner a real functional task list anchored
+// in 3D, and gives the timer its real casing + canvas-texture digit face.
+// Binder/whiteboard/planner geometry itself is still primitive boxes —
+// real modeled geometry and PBR materials are their own pass, not bundled
+// into this one.
 
 function InteractiveBox({
   position,
@@ -52,7 +66,7 @@ function InteractiveBox({
 function DeskAndWall() {
   return (
     <>
-      {/* Desk surface — temporary flat color; PBR wood arrives with real geometry in Tier 2. */}
+      {/* Desk surface — temporary flat color; PBR wood is a later pass. */}
       <mesh position={[OBJECT_LAYOUT.desk.x, -0.02, OBJECT_LAYOUT.desk.z]} receiveShadow>
         <boxGeometry args={[4.2, 0.04, 2.2]} />
         <meshStandardMaterial color="#5a4632" roughness={0.85} metalness={0.02} />
@@ -72,10 +86,10 @@ function DeskAndWall() {
 }
 
 function LampMarker() {
-  // Stands in for the real lamp model (Tier 2). The warm directional light
-  // below is positioned to match — establishing now that light source and
-  // geometry agree, per the brief's "every object's shadows must agree
-  // with it" requirement, rather than retrofitting that later.
+  // Stands in for the real lamp model. The warm directional light below is
+  // positioned to match — light source and geometry agree now, per the
+  // brief's "every object's shadows must agree with it," rather than
+  // retrofitting that once the real lamp model exists.
   return (
     <mesh position={[OBJECT_LAYOUT.lamp.x, OBJECT_LAYOUT.lamp.y, OBJECT_LAYOUT.lamp.z]} castShadow>
       <sphereGeometry args={[0.08, 16, 16]} />
@@ -84,17 +98,17 @@ function LampMarker() {
   );
 }
 
-function SceneObjects({ binderId }: { binderId: string }) {
+function SceneObjects({ userId, discipline, binderId }: { userId: string; discipline: Discipline; binderId: string }) {
   const goToBinder = useCameraStore((s) => s.goToBinder);
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
+  const state = useCameraStore((s) => s.state);
 
   return (
     <>
       <DeskAndWall />
       <LampMarker />
 
-      {/* Binder */}
       <InteractiveBox
         position={[OBJECT_LAYOUT.binder.x, OBJECT_LAYOUT.binder.y, OBJECT_LAYOUT.binder.z]}
         size={[0.32, 0.42, 0.06]}
@@ -103,7 +117,6 @@ function SceneObjects({ binderId }: { binderId: string }) {
         onSelect={() => goToBinder(binderId)}
       />
 
-      {/* Planner sheet */}
       <InteractiveBox
         position={[OBJECT_LAYOUT.planner.x, OBJECT_LAYOUT.planner.y, OBJECT_LAYOUT.planner.z]}
         size={[0.9, 0.02, 0.6]}
@@ -111,8 +124,17 @@ function SceneObjects({ binderId }: { binderId: string }) {
         label="planner"
         onSelect={goToPlanner}
       />
+      {/* The real task list only mounts while actually focused on the
+          planner — real interactive DOM sitting tiny/occluded in the
+          idle-wide view would be unreadable and a stray hit-test target. */}
+      {state === "PLANNER_FOCUS" && (
+        <PlannerHtmlPanel
+          userId={userId}
+          discipline={discipline}
+          position={[OBJECT_LAYOUT.planner.x, OBJECT_LAYOUT.planner.y + 0.02, OBJECT_LAYOUT.planner.z - 0.3]}
+        />
+      )}
 
-      {/* Whiteboard */}
       <InteractiveBox
         position={[OBJECT_LAYOUT.whiteboard.x, OBJECT_LAYOUT.whiteboard.y, OBJECT_LAYOUT.whiteboard.z]}
         size={[1.6, 1, 0.04]}
@@ -121,62 +143,26 @@ function SceneObjects({ binderId }: { binderId: string }) {
         onSelect={goToWhiteboard}
       />
 
-      {/* Timer — 3D casing only per the brief; the digit face is a canvas
-          texture (Tier 2). Not click-interactive yet. */}
-      <mesh position={[OBJECT_LAYOUT.timer.x, OBJECT_LAYOUT.timer.y, OBJECT_LAYOUT.timer.z]} castShadow>
-        <cylinderGeometry args={[0.12, 0.12, 0.06, 32]} />
-        <meshStandardMaterial color="#8b9190" roughness={0.35} metalness={0.6} />
-      </mesh>
+      <TimerObject userId={userId} position={[OBJECT_LAYOUT.timer.x, OBJECT_LAYOUT.timer.y, OBJECT_LAYOUT.timer.z]} />
     </>
   );
 }
 
-function OverlayPanel({
-  title,
-  onClose,
+export function DeskScene({
+  userId,
+  discipline,
+  onLogOut,
 }: {
-  title: string;
-  onClose: () => void;
+  userId: string;
+  discipline: Discipline;
+  onLogOut: () => void;
 }) {
-  // The real crossfade target for Tier 2: this becomes the actual
-  // BinderView / tldraw mount. The AnimatePresence-driven opacity fade is
-  // the "crossfade transition, not a hard cut" the brief asks for — proven
-  // out now so Tier 2 only swaps content, not the transition mechanism.
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.35 }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "var(--color-bg)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-        zIndex: 20,
-      }}
-    >
-      <p className="text-sm text-[var(--color-text-muted)]">{title} mounts here — Tier 2</p>
-      <button
-        type="button"
-        onClick={onClose}
-        className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-[var(--space-4)] py-[var(--space-2)] text-sm"
-      >
-        Close
-      </button>
-    </motion.div>
-  );
-}
-
-export function DeskScene({ onLogOut }: { onLogOut: () => void }) {
   const state = useCameraStore((s) => s.state);
   const overlay = useCameraStore((s) => s.overlay);
   const closeOverlay = useCameraStore((s) => s.closeOverlay);
   const undo = useCameraStore((s) => s.undo);
+  const { data: binders } = useBinders(userId);
+  const binder = binders?.find((b) => b.discipline === discipline);
 
   // Escape always backs out one step — mirrors the "misclick should be
   // undo-able" requirement without waiting for the full Tier 3 undo system.
@@ -206,17 +192,17 @@ export function DeskScene({ onLogOut }: { onLogOut: () => void }) {
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
-        {/* Real Poly Haven HDRI/PBR materials arrive with Tier 2's real
-            geometry, not here — deliberately. drei's <Environment> fetches
-            its map over the network, and r3f's <Canvas> wraps children in a
-            Suspense boundary with no fallback by default: a slow or failed
-            fetch would blank the ENTIRE scene, including every click handler
-            in it, not just the environment map (confirmed while building
-            this — the whole canvas went dark and unclickable on a flaky
-            connection). When a real HDRI is added, wrap it alone in its own
+        {/* Real Poly Haven HDRI/PBR materials are a later pass, deliberately
+            not here — drei's <Environment> fetches its map over the network,
+            and r3f's <Canvas> wraps children in a Suspense boundary with no
+            fallback by default: a slow or failed fetch would blank the
+            ENTIRE scene, including every click handler in it, not just the
+            environment map (confirmed while building Tier 1 — the whole
+            canvas went dark and unclickable on a flaky connection). When a
+            real HDRI is added, wrap it alone in its own
             `<Suspense fallback={null}>` so a slow network fetch degrades to
             "no reflections yet," never to "the whole desk vanished." */}
-        <SceneObjects binderId="demo-binder" />
+        <SceneObjects userId={userId} discipline={discipline} binderId={binder?.id ?? ""} />
       </Canvas>
 
       <div
@@ -249,8 +235,32 @@ export function DeskScene({ onLogOut }: { onLogOut: () => void }) {
       </div>
 
       <AnimatePresence>
-        {overlay === "binder" && <OverlayPanel key="binder" title="Binder reader" onClose={closeOverlay} />}
-        {overlay === "whiteboard" && <OverlayPanel key="whiteboard" title="Whiteboard" onClose={closeOverlay} />}
+        {overlay && (
+          <Suspense
+            fallback={
+              <div
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 20,
+                  background: "var(--color-bg)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span className="text-sm text-[var(--color-text-muted)]">Opening…</span>
+              </div>
+            }
+          >
+            {overlay === "binder" && (
+              <BinderOverlay key="binder" userId={userId} discipline={discipline} onClose={closeOverlay} />
+            )}
+            {overlay === "whiteboard" && (
+              <WhiteboardOverlay key="whiteboard" userId={userId} onClose={closeOverlay} />
+            )}
+          </Suspense>
+        )}
       </AnimatePresence>
     </div>
   );
