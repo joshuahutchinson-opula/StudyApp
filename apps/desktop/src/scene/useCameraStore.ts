@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { CameraStateId } from "./cameraStates";
 
-export type OverlayId = "binder" | "whiteboard" | "recall" | "textbook" | null;
+export type OverlayId = "binder" | "whiteboard" | "recall" | "textbook" | "signature" | null;
 
 interface CameraHistoryEntry {
   state: CameraStateId;
@@ -32,6 +32,7 @@ interface CameraStore {
   goToTextbook: () => void;
   goToDrawer: () => void;
   goToWall: () => void;
+  goToSignature: () => void;
   settleOverlay: () => void;
   closeOverlay: () => void;
   undo: () => void;
@@ -133,6 +134,18 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     });
   },
 
+  goToSignature: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "SIGNATURE_APPROACH",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
   // Fired by CameraRig once an approach state's camera has actually settled
   // at its target — the one-way/self-terminating handoff into the 2D overlay.
   settleOverlay: () => {
@@ -141,6 +154,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     else if (state === "WHITEBOARD_APPROACH") set({ overlay: "whiteboard" });
     else if (state === "RECALL_APPROACH") set({ overlay: "recall" });
     else if (state === "TEXTBOOK_APPROACH") set({ overlay: "textbook" });
+    else if (state === "SIGNATURE_APPROACH") set({ overlay: "signature" });
   },
 
   // Closing an overlay (or clicking away) reverses to IDLE_WIDE, faster than

@@ -23,6 +23,13 @@ const BinderOverlay = lazy(() => import("./BinderOverlay").then((m) => ({ defaul
 const WhiteboardOverlay = lazy(() => import("./WhiteboardOverlay").then((m) => ({ default: m.WhiteboardOverlay })));
 const RecallOverlay = lazy(() => import("./RecallOverlay").then((m) => ({ default: m.RecallOverlay })));
 const TextbookOverlay = lazy(() => import("./TextbookOverlay").then((m) => ({ default: m.TextbookOverlay })));
+const SignatureFeatureOverlay = lazy(() =>
+  import("./SignatureFeatureOverlay").then((m) => ({ default: m.SignatureFeatureOverlay })),
+);
+
+// The three disciplines with a standalone signature-feature "room" — see
+// SignatureFeatureOverlay.tsx for why Software/Engineering aren't here.
+const DISCIPLINES_WITH_SIGNATURE_OBJECT: readonly Discipline[] = ["medicine", "arts", "writing"];
 
 // Tier 1 established the camera FSM against placeholder geometry. Tier 2
 // (this file) swaps the overlay placeholders for the real binder reader and
@@ -169,10 +176,12 @@ function LampMarker() {
 
 function SceneObjects({
   userId,
+  discipline,
   binderId,
   theme,
 }: {
   userId: string;
+  discipline: Discipline;
   binderId: string;
   theme: DeskTheme;
 }) {
@@ -180,6 +189,7 @@ function SceneObjects({
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
   const goToRecall = useCameraStore((s) => s.goToRecall);
+  const goToSignature = useCameraStore((s) => s.goToSignature);
   const goToTextbook = useCameraStore((s) => s.goToTextbook);
   const goToDrawer = useCameraStore((s) => s.goToDrawer);
   const goToWall = useCameraStore((s) => s.goToWall);
@@ -255,6 +265,18 @@ function SceneObjects({
         <ExamDrawerPanel
           userId={userId}
           position={[OBJECT_LAYOUT.drawer.x, OBJECT_LAYOUT.drawer.y + 0.3, OBJECT_LAYOUT.drawer.z - 0.2]}
+        />
+      )}
+
+      {/* Tier 8: only the three disciplines with a standalone signature
+          feature get this object — see SignatureFeatureOverlay.tsx. */}
+      {DISCIPLINES_WITH_SIGNATURE_OBJECT.includes(discipline) && (
+        <InteractiveBox
+          position={[OBJECT_LAYOUT.signature.x, OBJECT_LAYOUT.signature.y, OBJECT_LAYOUT.signature.z]}
+          size={[0.34, 0.08, 0.24]}
+          color={theme.signature}
+          label="signature"
+          onSelect={goToSignature}
         />
       )}
     </>
@@ -340,7 +362,7 @@ export function DeskScene({
             real HDRI is added, wrap it alone in its own
             `<Suspense fallback={null}>` so a slow network fetch degrades to
             "no reflections yet," never to "the whole desk vanished." */}
-        <SceneObjects userId={userId} binderId={binder?.id ?? ""} theme={theme} />
+        <SceneObjects userId={userId} discipline={discipline} binderId={binder?.id ?? ""} theme={theme} />
       </Canvas>
 
       <div
@@ -402,6 +424,9 @@ export function DeskScene({
             )}
             {overlay === "textbook" && (
               <TextbookOverlay key="textbook" userId={userId} discipline={discipline} onClose={closeOverlay} />
+            )}
+            {overlay === "signature" && (
+              <SignatureFeatureOverlay key="signature" userId={userId} discipline={discipline} onClose={closeOverlay} />
             )}
           </Suspense>
         )}

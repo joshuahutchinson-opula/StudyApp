@@ -88,7 +88,8 @@ export function CameraRig() {
       (state === "BINDER_APPROACH" ||
         state === "WHITEBOARD_APPROACH" ||
         state === "RECALL_APPROACH" ||
-        state === "TEXTBOOK_APPROACH")
+        state === "TEXTBOOK_APPROACH" ||
+        state === "SIGNATURE_APPROACH")
     ) {
       const posDist = camera.position.distanceTo(new Vector3(target.position.x, target.position.y, target.position.z));
       const speed = posVel.current.length();

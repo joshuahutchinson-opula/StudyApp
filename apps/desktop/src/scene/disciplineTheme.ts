@@ -19,7 +19,15 @@ export interface DeskTheme {
   textbook: string;
   drawerBase: string;
   drawerGlow: string;
+  /** Tier 8's per-discipline signature-feature object. One shared gold
+   * across every discipline on purpose — it marks "the special room," a
+   * different kind of signal than the discipline-identity colors every
+   * other object carries, so it stays visually distinct from binder/
+   * recall/textbook regardless of which discipline it's rendered in. */
+  signature: string;
 }
+
+const SIGNATURE_GOLD = "#d4a017";
 
 // Tier 7's user desk/wall customization: presets a user can pick from,
 // applied as a partial override merged on top of their discipline's default
@@ -49,9 +57,12 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     planner: "#e8f0f0",
     whiteboard: "#eef0ee",
     recall: "#1f7a6c",
-    textbook: "#0b3d4c",
+    // Lighter than `binder` on purpose — same discipline hue, but distinct
+    // enough that the two objects don't read as identical boxes on the desk.
+    textbook: "#3d6b7a",
     drawerBase: "#33403c",
     drawerGlow: "#1f7a6c",
+    signature: SIGNATURE_GOLD,
   },
   // software.css: --color-primary: #5eead4; --color-accent: #7dd3fc;
   software: {
@@ -61,9 +72,10 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     planner: "#dfe7ea",
     whiteboard: "#eef0ee",
     recall: "#7dd3fc",
-    textbook: "#0f4b43",
+    textbook: "#3a7268",
     drawerBase: "#1c2029",
     drawerGlow: "#7dd3fc",
+    signature: SIGNATURE_GOLD,
   },
   // writing.css: --color-primary: #3d3226; --color-accent: #a3512b;
   writing: {
@@ -73,9 +85,10 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     planner: "#f0e9da",
     whiteboard: "#eef0ee",
     recall: "#a3512b",
-    textbook: "#3d3226",
+    textbook: "#6b5c4a",
     drawerBase: "#4a3c2c",
     drawerGlow: "#a3512b",
+    signature: SIGNATURE_GOLD,
   },
   // engineering.css: --color-primary: #14335e; --color-accent: #2b6cb0;
   engineering: {
@@ -85,9 +98,10 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     planner: "#eef1f5",
     whiteboard: "#eef0ee",
     recall: "#2b6cb0",
-    textbook: "#14335e",
+    textbook: "#456186",
     drawerBase: "#2e3644",
     drawerGlow: "#2b6cb0",
+    signature: SIGNATURE_GOLD,
   },
   // arts.css: --color-primary: #1a1a1a; --color-accent: #c1432c;
   arts: {
@@ -97,8 +111,9 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     planner: "#f5f0e8",
     whiteboard: "#eef0ee",
     recall: "#c1432c",
-    textbook: "#1a1a1a",
+    textbook: "#5c4a42",
     drawerBase: "#262626",
     drawerGlow: "#c1432c",
+    signature: SIGNATURE_GOLD,
   },
 };

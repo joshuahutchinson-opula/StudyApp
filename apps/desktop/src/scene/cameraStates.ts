@@ -12,7 +12,8 @@ export type CameraStateId =
   | "RECALL_APPROACH"
   | "TEXTBOOK_APPROACH"
   | "DRAWER_FOCUS"
-  | "WALL_FOCUS";
+  | "WALL_FOCUS"
+  | "SIGNATURE_APPROACH";
 // RETURN is not a distinct resting state — it's a transition tagged onto
 // whatever state IDLE_WIDE is reached through, so it can use its own (faster)
 // spring constants. See useCameraStore's `returnToIdle`.
@@ -94,6 +95,14 @@ export const CAMERA_TARGETS: Record<CameraStateId, CameraTarget> = {
     lookAt: { x: 1.6, y: 1.9, z: -2.2 },
     fov: 46,
   },
+  // Tier 8's discipline signature feature object — a full approach (like
+  // BINDER_APPROACH) since ClinicalCaseSim/CritiqueRoom/ManuscriptTimeline
+  // are substantial interactive surfaces, not a glance-and-close panel.
+  SIGNATURE_APPROACH: {
+    position: { x: -0.55, y: 1.15, z: 2.25 },
+    lookAt: { x: -0.55, y: 0.95, z: 0.9 },
+    fov: 38,
+  },
 };
 
 // Which desk objects live at which resting spots — placeholder geometry uses
@@ -115,4 +124,11 @@ export const OBJECT_LAYOUT = {
   // The drawer isn't a free object on the desk — it's built into the front
   // edge of the desk itself, hanging below the desktop surface.
   drawer: { x: 0, y: -0.18, z: 1.35 },
+  // Tier 8's per-discipline signature feature object (ClinicalCaseSim /
+  // CritiqueRoom / ManuscriptTimeline) — only mounted for the three
+  // disciplines that actually have a standalone "room" for theirs; Software
+  // and Engineering's signature features (RunnableCode, FormulaBlock) are
+  // already reachable inline on every relevant binder page, so they don't
+  // need a second entry point.
+  signature: { x: -0.55, y: 0.46, z: 0.95 },
 } as const;
