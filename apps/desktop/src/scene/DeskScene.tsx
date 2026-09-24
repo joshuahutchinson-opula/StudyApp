@@ -11,6 +11,7 @@ import { PlannerHtmlPanel } from "./PlannerHtmlPanel";
 import { ExamDrawerPanel } from "./ExamDrawerPanel";
 import { globalUndo, registerUndoSource } from "./undoRouter";
 import { useExamMode } from "../hooks/useExamMode";
+import { DISCIPLINE_DESK_THEME, type DeskTheme } from "./disciplineTheme";
 
 // All full-screen overlays are code-split — neither ships in the initial
 // bundle, same pattern the old dashboard used for Cytoscape (GraphView). The
@@ -71,7 +72,17 @@ function InteractiveBox({
 // it needs an emissive tint that responds to useExamMode()'s active state
 // (a faint warm glow when something's due soon), which no other desk object
 // does.
-function DrawerFront({ position, active, onSelect }: { position: readonly [number, number, number]; active: boolean; onSelect: () => void }) {
+function DrawerFront({
+  position,
+  active,
+  theme,
+  onSelect,
+}: {
+  position: readonly [number, number, number];
+  active: boolean;
+  theme: DeskTheme;
+  onSelect: () => void;
+}) {
   return (
     <mesh
       position={position}
@@ -91,8 +102,8 @@ function DrawerFront({ position, active, onSelect }: { position: readonly [numbe
     >
       <boxGeometry args={[1.0, 0.28, 0.06]} />
       <meshStandardMaterial
-        color="#3d3226"
-        emissive={active ? "#c1432c" : "#000000"}
+        color={theme.drawerBase}
+        emissive={active ? theme.drawerGlow : "#000000"}
         emissiveIntensity={active ? 0.35 : 0}
         roughness={0.7}
         metalness={0.05}
@@ -101,18 +112,19 @@ function DrawerFront({ position, active, onSelect }: { position: readonly [numbe
   );
 }
 
-function DeskAndWall() {
+function DeskAndWall({ theme }: { theme: DeskTheme }) {
   return (
     <>
-      {/* Desk surface — temporary flat color; PBR wood is a later pass. */}
+      {/* Desk surface + wall — Tier 5's material/prop swap: color driven by
+          the active discipline's theme instead of one fixed hardcoded hex. */}
       <mesh position={[OBJECT_LAYOUT.desk.x, -0.02, OBJECT_LAYOUT.desk.z]} receiveShadow>
         <boxGeometry args={[4.2, 0.04, 2.2]} />
-        <meshStandardMaterial color="#5a4632" roughness={0.85} metalness={0.02} />
+        <meshStandardMaterial color={theme.deskWood} roughness={0.85} metalness={0.02} />
       </mesh>
       {/* Wall */}
       <mesh position={[OBJECT_LAYOUT.wall.x, OBJECT_LAYOUT.wall.y, OBJECT_LAYOUT.wall.z]} receiveShadow>
         <boxGeometry args={[6, 3.2, 0.05]} />
-        <meshStandardMaterial color="#cfc3ac" roughness={0.95} metalness={0} />
+        <meshStandardMaterial color={theme.wall} roughness={0.95} metalness={0} />
       </mesh>
       {/* Floor, mostly to catch shadows and ground the scene visually */}
       <mesh position={[0, -0.6, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -136,7 +148,15 @@ function LampMarker() {
   );
 }
 
-function SceneObjects({ userId, binderId }: { userId: string; binderId: string }) {
+function SceneObjects({
+  userId,
+  binderId,
+  theme,
+}: {
+  userId: string;
+  binderId: string;
+  theme: DeskTheme;
+}) {
   const goToBinder = useCameraStore((s) => s.goToBinder);
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
@@ -148,13 +168,13 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
 
   return (
     <>
-      <DeskAndWall />
+      <DeskAndWall theme={theme} />
       <LampMarker />
 
       <InteractiveBox
         position={[OBJECT_LAYOUT.binder.x, OBJECT_LAYOUT.binder.y, OBJECT_LAYOUT.binder.z]}
         size={[0.32, 0.42, 0.06]}
-        color="#16303b"
+        color={theme.binder}
         label="binder"
         onSelect={() => goToBinder(binderId)}
       />
@@ -162,7 +182,7 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       <InteractiveBox
         position={[OBJECT_LAYOUT.planner.x, OBJECT_LAYOUT.planner.y, OBJECT_LAYOUT.planner.z]}
         size={[0.9, 0.02, 0.6]}
-        color="#f0e9da"
+        color={theme.planner}
         label="planner"
         onSelect={goToPlanner}
       />
@@ -179,7 +199,7 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       <InteractiveBox
         position={[OBJECT_LAYOUT.whiteboard.x, OBJECT_LAYOUT.whiteboard.y, OBJECT_LAYOUT.whiteboard.z]}
         size={[1.6, 1, 0.04]}
-        color="#eef0ee"
+        color={theme.whiteboard}
         label="whiteboard"
         onSelect={goToWhiteboard}
       />
@@ -189,7 +209,7 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       <InteractiveBox
         position={[OBJECT_LAYOUT.recall.x, OBJECT_LAYOUT.recall.y, OBJECT_LAYOUT.recall.z]}
         size={[0.3, 0.08, 0.22]}
-        color="#d97757"
+        color={theme.recall}
         label="recall"
         onSelect={goToRecall}
       />
@@ -197,7 +217,7 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       <InteractiveBox
         position={[OBJECT_LAYOUT.textbook.x, OBJECT_LAYOUT.textbook.y, OBJECT_LAYOUT.textbook.z]}
         size={[0.28, 0.36, 0.09]}
-        color="#7a2e2e"
+        color={theme.textbook}
         label="textbook"
         onSelect={goToTextbook}
       />
@@ -205,6 +225,7 @@ function SceneObjects({ userId, binderId }: { userId: string; binderId: string }
       <DrawerFront
         position={[OBJECT_LAYOUT.drawer.x, OBJECT_LAYOUT.drawer.y, OBJECT_LAYOUT.drawer.z]}
         active={examMode.active}
+        theme={theme}
         onSelect={goToDrawer}
       />
       {state === "DRAWER_FOCUS" && (
@@ -232,6 +253,7 @@ export function DeskScene({
   const undo = useCameraStore((s) => s.undo);
   const { data: binders } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
+  const theme = DISCIPLINE_DESK_THEME[discipline];
 
   // Register the camera FSM's own undo stack with the Tier 3 global undo
   // router, so Ctrl+Z can route to "undo the last camera move" or "undo the
@@ -294,7 +316,7 @@ export function DeskScene({
             real HDRI is added, wrap it alone in its own
             `<Suspense fallback={null}>` so a slow network fetch degrades to
             "no reflections yet," never to "the whole desk vanished." */}
-        <SceneObjects userId={userId} binderId={binder?.id ?? ""} />
+        <SceneObjects userId={userId} binderId={binder?.id ?? ""} theme={theme} />
       </Canvas>
 
       <div
