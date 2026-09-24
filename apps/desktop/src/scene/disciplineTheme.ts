@@ -13,6 +13,12 @@ export interface DeskTheme {
   deskWood: string;
   wall: string;
   binder: string;
+  /** Asset pass: which real material family the binder cover is built from
+   * — "leather" (Poly Haven leather_white, tinted) for the warmer
+   * disciplines, "rubber" (metal_plate with metalness/roughness overridden
+   * toward a matte rubberized look) for Software/Engineering. A genuine
+   * material swap per discipline, not just a color change on one texture. */
+  binderMaterial: "leather" | "rubber";
   planner: string;
   whiteboard: string;
   recall: string;
@@ -62,6 +68,7 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     deskWood: "#4a5a52",
     wall: "#7a95a0",
     binder: "#0b3d4c",
+    binderMaterial: "leather",
     planner: "#e8f0f0",
     whiteboard: "#eef0ee",
     recall: "#1f7a6c",
@@ -77,6 +84,7 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     deskWood: "#262b35",
     wall: "#1a1e26",
     binder: "#0f4b43",
+    binderMaterial: "rubber",
     planner: "#dfe7ea",
     whiteboard: "#eef0ee",
     recall: "#7dd3fc",
@@ -90,6 +98,7 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     deskWood: "#5a4632",
     wall: "#b8916a",
     binder: "#3d3226",
+    binderMaterial: "leather",
     planner: "#f0e9da",
     whiteboard: "#eef0ee",
     recall: "#a3512b",
@@ -103,6 +112,7 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     deskWood: "#3d4552",
     wall: "#8a97a8",
     binder: "#14335e",
+    binderMaterial: "rubber",
     planner: "#eef1f5",
     whiteboard: "#eef0ee",
     recall: "#2b6cb0",
@@ -116,6 +126,7 @@ export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
     deskWood: "#2b2b2b",
     wall: "#4a4a4a",
     binder: "#1a1a1a",
+    binderMaterial: "leather",
     planner: "#f5f0e8",
     whiteboard: "#eef0ee",
     recall: "#c1432c",

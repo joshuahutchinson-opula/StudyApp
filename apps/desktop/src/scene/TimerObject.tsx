@@ -2,6 +2,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CanvasTexture } from "three";
 import { useEndSession, useStartSession } from "../features/focus/api";
+import { usePbrMaps, pbrMaterialProps } from "./materials";
 
 const POMODORO_SECONDS = 25 * 60;
 
@@ -73,6 +74,10 @@ export function TimerObject({
   }
 
   const remaining = Math.max(0, POMODORO_SECONDS - elapsed);
+  // Asset pass: real brushed-metal PBR casing instead of a flat gray color —
+  // repeat kept small (this object is tiny) so the plate's own scratches
+  // don't tile into visible noise at this scale.
+  const metal = usePbrMaps("metal_plate", [0.6, 0.6]);
 
   const canvas = useMemo(() => {
     const c = document.createElement("canvas");
@@ -116,12 +121,19 @@ export function TimerObject({
       >
         <cylinderGeometry args={[0.13, 0.14, 0.055, 40]} />
         <meshStandardMaterial
+          {...pbrMaterialProps(metal)}
           color="#9aa09f"
           emissive={editingLayout ? "#2d7d8e" : "#000000"}
           emissiveIntensity={editingLayout ? 0.5 : 0}
-          roughness={0.3}
-          metalness={0.7}
+          roughness={1}
+          metalness={1}
         />
+      </mesh>
+      {/* A thin brass bezel ring around the digit face, matching the
+          reference's timer — a real torus, not implied by the texture. */}
+      <mesh position={[0, 0.0276, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.117, 0.006, 12, 48]} />
+        <meshStandardMaterial color="#d4af37" roughness={0.3} metalness={0.9} />
       </mesh>
       {/* Digit face: a flat disc on the casing's top surface, textured with
           the canvas above — the "2D texture applied to the geometry's

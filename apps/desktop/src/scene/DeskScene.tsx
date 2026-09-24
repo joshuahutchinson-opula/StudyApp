@@ -18,6 +18,16 @@ import { LampLightDrift } from "./LampLightDrift";
 import { AmbientRecap } from "./AmbientRecap";
 import { TIMER_SLOTS, resolveTimerSlot } from "./deskLayout";
 import { useUpdateDeskLayout } from "../features/preferences/api";
+import { usePbrMaps, pbrMaterialProps } from "./materials";
+import { Environment } from "@react-three/drei";
+import { BinderObject } from "./props/BinderObject";
+import { PlannerObject } from "./props/PlannerObject";
+import { WhiteboardObject } from "./props/WhiteboardObject";
+import { LampProp } from "./props/LampProp";
+import { BookshelfProp } from "./props/BookshelfProp";
+import { CorkboardProp } from "./props/CorkboardProp";
+import { DeskClutterProp } from "./props/DeskClutterProp";
+import { TextbookObject } from "./props/TextbookObject";
 
 // All full-screen overlays are code-split — neither ships in the initial
 // bundle, same pattern the old dashboard used for Cytoscape (GraphView). The
@@ -99,11 +109,12 @@ function DrawerFront({
   theme: DeskTheme;
   onSelect: () => void;
 }) {
+  const wood = usePbrMaps("dark_wood", [1, 0.3]);
+  const metal = usePbrMaps("metal_plate", [0.3, 0.3]);
+
   return (
-    <mesh
+    <group
       position={position}
-      castShadow
-      receiveShadow
       onClick={(e) => {
         e.stopPropagation();
         onSelect();
@@ -116,26 +127,40 @@ function DrawerFront({
         document.body.style.cursor = "auto";
       }}
     >
-      <boxGeometry args={[1.0, 0.28, 0.06]} />
-      <meshStandardMaterial
-        color={theme.drawerBase}
-        emissive={active ? theme.drawerGlow : "#000000"}
-        emissiveIntensity={active ? 0.35 : 0}
-        roughness={0.7}
-        metalness={0.05}
-      />
-    </mesh>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[1.0, 0.28, 0.06]} />
+        <meshStandardMaterial
+          {...pbrMaterialProps(wood)}
+          color={theme.drawerBase}
+          emissive={active ? theme.drawerGlow : "#000000"}
+          emissiveIntensity={active ? 0.35 : 0}
+          roughness={1}
+          metalness={1}
+        />
+      </mesh>
+      {/* Handle */}
+      <mesh position={[0, 0, 0.035]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.008, 0.008, 0.22, 12]} />
+        <meshStandardMaterial {...pbrMaterialProps(metal)} color="#c7cdd1" roughness={0.6} metalness={1} />
+      </mesh>
+    </group>
   );
 }
 
 function DeskAndWall({ theme, onSelectWall }: { theme: DeskTheme; onSelectWall: () => void }) {
+  // Real Poly Haven PBR sets (see materials.ts) — theme.deskWood/theme.wall
+  // now tint a genuine wood-grain/plaster diffuse+normal+roughness texture
+  // via material.color instead of coloring a flat primitive. Repeat counts
+  // are picked so the grain reads at roughly real-world scale against each
+  // surface's actual size (a 4.2-unit desk isn't one giant stretched plank).
+  const deskMaps = usePbrMaps("dark_wood", [3, 2]);
+  const wallMaps = usePbrMaps("painted_plaster_wall", [4, 2]);
+
   return (
     <>
-      {/* Desk surface + wall — Tier 5's material/prop swap: color driven by
-          the active discipline's theme instead of one fixed hardcoded hex. */}
-      <mesh position={[OBJECT_LAYOUT.desk.x, -0.02, OBJECT_LAYOUT.desk.z]} receiveShadow>
+      <mesh position={[OBJECT_LAYOUT.desk.x, -0.02, OBJECT_LAYOUT.desk.z]} receiveShadow castShadow>
         <boxGeometry args={[4.2, 0.04, 2.2]} />
-        <meshStandardMaterial color={theme.deskWood} roughness={0.85} metalness={0.02} />
+        <meshStandardMaterial {...pbrMaterialProps(deskMaps)} color={theme.deskWood} roughness={1} metalness={1} />
       </mesh>
       {/* Wall — also Tier 7's customization entry point. The whiteboard
           object sits slightly in front of it (z -2.15 vs -2.2), so clicking
@@ -157,7 +182,7 @@ function DeskAndWall({ theme, onSelectWall }: { theme: DeskTheme; onSelectWall: 
         }}
       >
         <boxGeometry args={[6, 3.2, 0.05]} />
-        <meshStandardMaterial color={theme.wall} roughness={0.95} metalness={0} />
+        <meshStandardMaterial {...pbrMaterialProps(wallMaps)} color={theme.wall} roughness={1} metalness={1} />
       </mesh>
       {/* Floor, mostly to catch shadows and ground the scene visually */}
       <mesh position={[0, -0.6, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -168,18 +193,8 @@ function DeskAndWall({ theme, onSelectWall }: { theme: DeskTheme; onSelectWall: 
   );
 }
 
-function LampMarker() {
-  // Stands in for the real lamp model. The warm directional light below is
-  // positioned to match — light source and geometry agree now, per the
-  // brief's "every object's shadows must agree with it," rather than
-  // retrofitting that once the real lamp model exists.
-  return (
-    <mesh position={[OBJECT_LAYOUT.lamp.x, OBJECT_LAYOUT.lamp.y, OBJECT_LAYOUT.lamp.z]} castShadow>
-      <sphereGeometry args={[0.08, 16, 16]} />
-      <meshStandardMaterial color="#ffdca0" emissive="#ffb347" emissiveIntensity={1.4} roughness={0.4} />
-    </mesh>
-  );
-}
+// LampMarker (a placeholder emissive sphere) is gone — LampProp (asset
+// pass) replaces it with a real composed base/arm/shade.
 
 function SceneObjects({
   userId,
@@ -218,24 +233,30 @@ function SceneObjects({
   return (
     <>
       <DeskAndWall theme={theme} onSelectWall={guard(goToWall)} />
-      <LampMarker />
+      <LampProp position={[OBJECT_LAYOUT.lamp.x, OBJECT_LAYOUT.lamp.y, OBJECT_LAYOUT.lamp.z]} />
       {state === "WALL_FOCUS" && (
         <WallCustomizePanel userId={userId} theme={theme} position={[1.6, 1.9, -2.17]} />
       )}
 
-      <InteractiveBox
+      {/* Asset pass decoration — bookshelf and corkboard, both clickable
+          through to the same wall-customization target so they don't read
+          as dead zones on a wall that's otherwise interactive everywhere
+          else. Positioned clear of the wall's own WALL_FOCUS panel (x=1.6). */}
+      <group onClick={(e) => { e.stopPropagation(); guard(goToWall)(); }}>
+        <BookshelfProp position={[-2.15, 1.3, -2.06]} />
+        <CorkboardProp position={[2.15, 1.65, -2.1]} />
+      </group>
+      <DeskClutterProp position={[1.55, 0.02, 0.55]} />
+
+      <BinderObject
         position={[OBJECT_LAYOUT.binder.x, OBJECT_LAYOUT.binder.y, OBJECT_LAYOUT.binder.z]}
-        size={[0.32, 0.42, 0.06]}
-        color={theme.binder}
-        label="binder"
+        theme={theme}
         onSelect={guard(() => goToBinder(binderId))}
       />
 
-      <InteractiveBox
+      <PlannerObject
         position={[OBJECT_LAYOUT.planner.x, OBJECT_LAYOUT.planner.y, OBJECT_LAYOUT.planner.z]}
-        size={[0.9, 0.02, 0.6]}
-        color={theme.planner}
-        label="planner"
+        theme={theme}
         onSelect={guard(goToPlanner)}
       />
       {/* The real task list only mounts while actually focused on the
@@ -248,11 +269,9 @@ function SceneObjects({
         />
       )}
 
-      <InteractiveBox
+      <WhiteboardObject
         position={[OBJECT_LAYOUT.whiteboard.x, OBJECT_LAYOUT.whiteboard.y, OBJECT_LAYOUT.whiteboard.z]}
-        size={[1.6, 1, 0.04]}
-        color={theme.whiteboard}
-        label="whiteboard"
+        theme={theme}
         onSelect={guard(goToWhiteboard)}
       />
 
@@ -271,11 +290,9 @@ function SceneObjects({
         onSelect={guard(goToRecall)}
       />
 
-      <InteractiveBox
+      <TextbookObject
         position={[OBJECT_LAYOUT.textbook.x, OBJECT_LAYOUT.textbook.y, OBJECT_LAYOUT.textbook.z]}
-        size={[0.28, 0.36, 0.09]}
-        color={theme.textbook}
-        label="textbook"
+        theme={theme}
         onSelect={guard(goToTextbook)}
       />
 
@@ -388,16 +405,18 @@ export function DeskScene({
             LampLightDrift — same light, but its color/intensity now
             follows the real time of day instead of a fixed value. */}
         <LampLightDrift />
-        {/* Real Poly Haven HDRI/PBR materials are a later pass, deliberately
-            not here — drei's <Environment> fetches its map over the network,
-            and r3f's <Canvas> wraps children in a Suspense boundary with no
-            fallback by default: a slow or failed fetch would blank the
-            ENTIRE scene, including every click handler in it, not just the
-            environment map (confirmed while building Tier 1 — the whole
-            canvas went dark and unclickable on a flaky connection). When a
-            real HDRI is added, wrap it alone in its own
-            `<Suspense fallback={null}>` so a slow network fetch degrades to
-            "no reflections yet," never to "the whole desk vanished." */}
+        {/* Asset pass: a real Poly Haven HDRI for ambient fill/reflections
+            (brass hardware, the binder's leather sheen) alongside the one
+            key light above. Wrapped in its OWN Suspense boundary, isolated
+            from the rest of the scene — r3f's <Canvas> has no fallback-less
+            Suspense boundary of its own, and a slow/failed environment-map
+            load blanking every click handler in the scene was a real bug
+            hit during Tier 1. Served locally from public/hdri (not a CDN
+            fetch), so this is now a belt-and-suspenders guard rather than a
+            live risk, but the isolation costs nothing to keep. */}
+        <Suspense fallback={null}>
+          <Environment files="/hdri/studio.hdr" background={false} environmentIntensity={0.6} />
+        </Suspense>
         <SceneObjects
           userId={userId}
           discipline={discipline}
