@@ -21,6 +21,25 @@ export interface DeskTheme {
   drawerGlow: string;
 }
 
+// Tier 7's user desk/wall customization: presets a user can pick from,
+// applied as a partial override merged on top of their discipline's default
+// theme (see mergeDeskTheme below) rather than replacing it outright — so
+// switching discipline still changes the binder/recall/textbook/drawer
+// colors, only desk wood + wall stay pinned to whatever the user picked.
+export const DESK_WOOD_PRESETS = ["#5a4632", "#3d2f22", "#6b5842", "#262b35", "#8a7355"] as const;
+export const WALL_PRESETS = ["#b8916a", "#7a95a0", "#8a97a8", "#4a4a4a", "#c9b896"] as const;
+
+export type DeskThemeOverride = Partial<Pick<DeskTheme, "deskWood" | "wall">>;
+
+export function mergeDeskTheme(base: DeskTheme, override: DeskThemeOverride | null | undefined): DeskTheme {
+  if (!override) return base;
+  return {
+    ...base,
+    ...(override.deskWood ? { deskWood: override.deskWood } : {}),
+    ...(override.wall ? { wall: override.wall } : {}),
+  };
+}
+
 export const DISCIPLINE_DESK_THEME: Record<Discipline, DeskTheme> = {
   // medicine.css: --color-primary: #0b3d4c; --color-accent: #1f7a6c;
   medicine: {

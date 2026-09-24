@@ -11,7 +11,9 @@ import { PlannerHtmlPanel } from "./PlannerHtmlPanel";
 import { ExamDrawerPanel } from "./ExamDrawerPanel";
 import { globalUndo, registerUndoSource } from "./undoRouter";
 import { useExamMode } from "../hooks/useExamMode";
-import { DISCIPLINE_DESK_THEME, type DeskTheme } from "./disciplineTheme";
+import { DISCIPLINE_DESK_THEME, mergeDeskTheme, type DeskTheme } from "./disciplineTheme";
+import { WallCustomizePanel } from "./WallCustomizePanel";
+import { useAuthStore } from "../store/useAuthStore";
 
 // All full-screen overlays are code-split — neither ships in the initial
 // bundle, same pattern the old dashboard used for Cytoscape (GraphView). The
@@ -112,7 +114,7 @@ function DrawerFront({
   );
 }
 
-function DeskAndWall({ theme }: { theme: DeskTheme }) {
+function DeskAndWall({ theme, onSelectWall }: { theme: DeskTheme; onSelectWall: () => void }) {
   return (
     <>
       {/* Desk surface + wall — Tier 5's material/prop swap: color driven by
@@ -121,8 +123,25 @@ function DeskAndWall({ theme }: { theme: DeskTheme }) {
         <boxGeometry args={[4.2, 0.04, 2.2]} />
         <meshStandardMaterial color={theme.deskWood} roughness={0.85} metalness={0.02} />
       </mesh>
-      {/* Wall */}
-      <mesh position={[OBJECT_LAYOUT.wall.x, OBJECT_LAYOUT.wall.y, OBJECT_LAYOUT.wall.z]} receiveShadow>
+      {/* Wall — also Tier 7's customization entry point. The whiteboard
+          object sits slightly in front of it (z -2.15 vs -2.2), so clicking
+          the whiteboard itself still hits the whiteboard first; only
+          clicking elsewhere on the wall reaches this handler. */}
+      <mesh
+        position={[OBJECT_LAYOUT.wall.x, OBJECT_LAYOUT.wall.y, OBJECT_LAYOUT.wall.z]}
+        receiveShadow
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectWall();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = "auto";
+        }}
+      >
         <boxGeometry args={[6, 3.2, 0.05]} />
         <meshStandardMaterial color={theme.wall} roughness={0.95} metalness={0} />
       </mesh>
@@ -163,13 +182,17 @@ function SceneObjects({
   const goToRecall = useCameraStore((s) => s.goToRecall);
   const goToTextbook = useCameraStore((s) => s.goToTextbook);
   const goToDrawer = useCameraStore((s) => s.goToDrawer);
+  const goToWall = useCameraStore((s) => s.goToWall);
   const state = useCameraStore((s) => s.state);
   const examMode = useExamMode(userId);
 
   return (
     <>
-      <DeskAndWall theme={theme} />
+      <DeskAndWall theme={theme} onSelectWall={goToWall} />
       <LampMarker />
+      {state === "WALL_FOCUS" && (
+        <WallCustomizePanel theme={theme} position={[1.6, 1.9, -2.17]} />
+      )}
 
       <InteractiveBox
         position={[OBJECT_LAYOUT.binder.x, OBJECT_LAYOUT.binder.y, OBJECT_LAYOUT.binder.z]}
@@ -253,7 +276,8 @@ export function DeskScene({
   const undo = useCameraStore((s) => s.undo);
   const { data: binders } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
-  const theme = DISCIPLINE_DESK_THEME[discipline];
+  const deskThemeOverride = useAuthStore((s) => s.user?.deskThemeOverride);
+  const theme = mergeDeskTheme(DISCIPLINE_DESK_THEME[discipline], deskThemeOverride);
 
   // Register the camera FSM's own undo stack with the Tier 3 global undo
   // router, so Ctrl+Z can route to "undo the last camera move" or "undo the

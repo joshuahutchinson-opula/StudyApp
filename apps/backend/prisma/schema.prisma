@@ -61,6 +61,11 @@ model User {
   passwordHash    String
   displayName     String
   activeDiscipline Discipline
+  // Tier 7's user desk/wall customization: a partial override of that
+  // discipline's DeskTheme (desk wood + wall color only — see
+  // scene/disciplineTheme.ts), merged on top of the discipline default
+  // rather than replacing it. Null means "just use the discipline default."
+  deskThemeOverride Json?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 

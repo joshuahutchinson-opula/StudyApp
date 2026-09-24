@@ -11,7 +11,8 @@ export type CameraStateId =
   | "WHITEBOARD_APPROACH"
   | "RECALL_APPROACH"
   | "TEXTBOOK_APPROACH"
-  | "DRAWER_FOCUS";
+  | "DRAWER_FOCUS"
+  | "WALL_FOCUS";
 // RETURN is not a distinct resting state — it's a transition tagged onto
 // whatever state IDLE_WIDE is reached through, so it can use its own (faster)
 // spring constants. See useCameraStore's `returnToIdle`.
@@ -83,6 +84,15 @@ export const CAMERA_TARGETS: Record<CameraStateId, CameraTarget> = {
     position: { x: 0, y: 0.75, z: 2.9 },
     lookAt: { x: 0, y: -0.25, z: 1.4 },
     fov: 42,
+  },
+  // Tier 7's desk/wall customization — a modest push toward the wall (not a
+  // full approach like the whiteboard's, since this is a glance-and-pick
+  // interaction, same non-overlay Html-panel family as PLANNER_FOCUS/
+  // DRAWER_FOCUS) so the wall fills more of the frame while picking a color.
+  WALL_FOCUS: {
+    position: { x: 1.6, y: 1.7, z: 2.3 },
+    lookAt: { x: 1.6, y: 1.9, z: -2.2 },
+    fov: 46,
   },
 };
 

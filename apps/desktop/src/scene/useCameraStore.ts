@@ -31,6 +31,7 @@ interface CameraStore {
   goToRecall: () => void;
   goToTextbook: () => void;
   goToDrawer: () => void;
+  goToWall: () => void;
   settleOverlay: () => void;
   closeOverlay: () => void;
   undo: () => void;
@@ -112,6 +113,18 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     const { state, binderId, history } = get();
     set({
       state: "DRAWER_FOCUS",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
+  goToWall: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "WALL_FOCUS",
       returning: false,
       binderId: null,
       overlay: null,

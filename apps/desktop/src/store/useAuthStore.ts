@@ -7,12 +7,15 @@ export interface AuthUser {
   email: string;
   displayName: string;
   activeDiscipline: Discipline;
+  /** Tier 7's user desk/wall customization override — see scene/disciplineTheme.ts. */
+  deskThemeOverride: Partial<{ deskWood: string; wall: string }> | null;
 }
 
 interface AuthState {
   token: string | null;
   user: AuthUser | null;
   setSession: (token: string, user: AuthUser) => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   logOut: () => void;
 }
 
@@ -22,6 +25,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       setSession: (token, user) => set({ token, user }),
+      updateUser: (patch) => set((s) => (s.user ? { user: { ...s.user, ...patch } } : s)),
       logOut: () => set({ token: null, user: null }),
     }),
     { name: "the-desk-auth" },
