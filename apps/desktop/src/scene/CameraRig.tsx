@@ -39,6 +39,7 @@ export function CameraRig() {
   const state = useCameraStore((s) => s.state);
   const returning = useCameraStore((s) => s.returning);
   const settleOverlay = useCameraStore((s) => s.settleOverlay);
+  const skipRequested = useCameraStore((s) => s.skipRequested);
 
   const posVel = useRef(new Vector3());
   const lookVel = useRef(new Vector3());
@@ -54,6 +55,38 @@ export function CameraRig() {
 
   useFrame((_, rawDelta) => {
     const target = CAMERA_TARGETS[state];
+
+    // Tier 9's skip-animation QoL feature: snap straight to the target
+    // instead of spring-stepping toward it. Zeroing velocity matters as much
+    // as setting position — without it the next frame's spring step would
+    // read leftover velocity from mid-flight and immediately overshoot away
+    // from the target it was just snapped to.
+    if (skipRequested) {
+      camera.position.set(target.position.x, target.position.y, target.position.z);
+      posVel.current.set(0, 0, 0);
+      currentLookAt.current.set(target.lookAt.x, target.lookAt.y, target.lookAt.z);
+      lookVel.current.set(0, 0, 0);
+      camera.lookAt(currentLookAt.current);
+      if ("fov" in camera) {
+        camera.fov = target.fov;
+        fovVel.current = 0;
+        camera.updateProjectionMatrix();
+      }
+      if (
+        !hasSettledForThisState.current &&
+        (state === "BINDER_APPROACH" ||
+          state === "WHITEBOARD_APPROACH" ||
+          state === "RECALL_APPROACH" ||
+          state === "TEXTBOOK_APPROACH" ||
+          state === "SIGNATURE_APPROACH")
+      ) {
+        hasSettledForThisState.current = true;
+        settleOverlay();
+      }
+      useCameraStore.getState().clearSkip();
+      return;
+    }
+
     // Clamp delta so a dev-tools pause or tab-away doesn't fling the spring —
     // loose enough (50ms) that an ordinary slow frame doesn't put the
     // simulation in slow motion relative to wall-clock time, tight enough to

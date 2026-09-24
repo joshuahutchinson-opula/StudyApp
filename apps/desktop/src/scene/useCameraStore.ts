@@ -25,6 +25,18 @@ interface CameraStore {
    * global undo router (undoRouter.ts) to decide whether a Ctrl+Z should
    * undo camera navigation or a task edit, whichever happened more recently. */
   lastActionAt: number | null;
+  /** Tier 9's skip-animation QoL feature. CameraRig reads this every frame;
+   * when true it snaps the camera straight to the current target (position,
+   * lookAt, fov, zero velocity) instead of spring-stepping toward it, fires
+   * the settle handoff immediately if this is an approach state, then
+   * clears the flag itself — this store only requests the skip, it doesn't
+   * know how to perform one (that's the rig's job, since it owns the actual
+   * three.js camera). */
+  skipRequested: boolean;
+  requestSkip: () => void;
+  /** Called by CameraRig once it's performed the snap — clears the request
+   * so the rig doesn't re-snap every subsequent frame. */
+  clearSkip: () => void;
   goToPlanner: () => void;
   goToBinder: (binderId: string) => void;
   goToWhiteboard: () => void;
@@ -47,6 +59,9 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
   overlay: null,
   history: [],
   lastActionAt: null,
+  skipRequested: false,
+  requestSkip: () => set({ skipRequested: true }),
+  clearSkip: () => set({ skipRequested: false }),
 
   goToPlanner: () => {
     const { state, binderId, history } = get();

@@ -10,3 +10,12 @@ export function useUpdateDeskTheme() {
     onSuccess: (user) => updateUser(user),
   });
 }
+
+/** Tier 9's rearrangeable desk — persists { [objectKey]: slotIndex }. */
+export function useUpdateDeskLayout() {
+  const updateUser = useAuthStore((s) => s.updateUser);
+  return useMutation({
+    mutationFn: (patch: Record<string, number>) => api.patch<AuthUser>("/auth/me/desk-layout", patch),
+    onSuccess: (user) => updateUser(user),
+  });
+}

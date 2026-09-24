@@ -9,6 +9,8 @@ export interface AuthUser {
   activeDiscipline: Discipline;
   /** Tier 7's user desk/wall customization override — see scene/disciplineTheme.ts. */
   deskThemeOverride: Partial<{ deskWood: string; wall: string }> | null;
+  /** Tier 9's rearrangeable desk override: { [objectKey]: slotIndex }. */
+  deskLayoutOverride: Record<string, number> | null;
 }
 
 interface AuthState {

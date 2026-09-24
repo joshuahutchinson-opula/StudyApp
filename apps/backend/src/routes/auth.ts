@@ -10,6 +10,7 @@ function publicUser(user: {
   displayName: string;
   activeDiscipline: string;
   deskThemeOverride?: unknown;
+  deskLayoutOverride?: unknown;
 }) {
   return {
     id: user.id,
@@ -17,6 +18,7 @@ function publicUser(user: {
     displayName: user.displayName,
     activeDiscipline: user.activeDiscipline,
     deskThemeOverride: user.deskThemeOverride ?? null,
+    deskLayoutOverride: user.deskLayoutOverride ?? null,
   };
 }
 
@@ -102,6 +104,29 @@ export async function authRoutes(app: FastifyInstance) {
     const user = await db.user.update({
       where: { id: req.userId },
       data: { deskThemeOverride: merged },
+    });
+    return publicUser(user);
+  });
+
+  // Tier 9's rearrangeable desk — see the schema comment on
+  // User.deskLayoutOverride for why this is scoped to objects with no
+  // dedicated camera-approach state (just "timer" today).
+  const DeskLayoutOverrideBody = z.record(z.string(), z.number().int().min(0));
+
+  app.patch("/auth/me/desk-layout", async (req, reply) => {
+    if (!req.userId) return reply.code(401).send({ error: "Not authenticated" });
+    const body = DeskLayoutOverrideBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send(body.error.flatten());
+
+    const existing = await db.user.findUnique({ where: { id: req.userId } });
+    if (!existing) return reply.code(401).send({ error: "Not authenticated" });
+
+    const existingOverride = (existing.deskLayoutOverride as Record<string, number> | null) ?? {};
+    const merged = { ...existingOverride, ...body.data };
+
+    const user = await db.user.update({
+      where: { id: req.userId },
+      data: { deskLayoutOverride: merged },
     });
     return publicUser(user);
   });

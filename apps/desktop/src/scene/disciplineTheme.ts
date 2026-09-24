@@ -37,6 +37,14 @@ const SIGNATURE_GOLD = "#d4a017";
 export const DESK_WOOD_PRESETS = ["#5a4632", "#3d2f22", "#6b5842", "#262b35", "#8a7355"] as const;
 export const WALL_PRESETS = ["#b8916a", "#7a95a0", "#8a97a8", "#4a4a4a", "#c9b896"] as const;
 
+// Tier 9's unlocks system: one extra wall preset, gated behind a real,
+// already-tracked stat (total spaced-repetition reviews — see
+// features/review/api.ts's useCardStats) instead of a separate achievements
+// table. Not discipline-tinted, like SIGNATURE_GOLD — it's a reward color,
+// not an identity color.
+export const REVIEW_UNLOCK_THRESHOLD = 5;
+export const UNLOCKABLE_WALL_PRESET = "#2d7d8e";
+
 export type DeskThemeOverride = Partial<Pick<DeskTheme, "deskWood" | "wall">>;
 
 export function mergeDeskTheme(base: DeskTheme, override: DeskThemeOverride | null | undefined): DeskTheme {

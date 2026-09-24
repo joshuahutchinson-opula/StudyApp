@@ -17,8 +17,24 @@ function formatTime(totalSeconds: number) {
  * as seven-segment geometry. Not part of the camera FSM (no dedicated
  * approach state); clicking it toggles a real focus session in place, same
  * hooks features/focus/FocusTimer.tsx already uses.
+ *
+ * Tier 9's rearrangeable desk repurposes this same click while
+ * `editingLayout` is true: instead of toggling the timer, it calls
+ * `onReposition` (DeskScene cycles it through TIMER_SLOTS) — the timer is
+ * the one desk object with no dedicated camera-approach state, so it's the
+ * only one that can move without desyncing a camera target from it.
  */
-export function TimerObject({ userId, position }: { userId: string; position: readonly [number, number, number] }) {
+export function TimerObject({
+  userId,
+  position,
+  editingLayout = false,
+  onReposition,
+}: {
+  userId: string;
+  position: readonly [number, number, number];
+  editingLayout?: boolean;
+  onReposition?: () => void;
+}) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const running = sessionId !== null;
@@ -48,6 +64,10 @@ export function TimerObject({ userId, position }: { userId: string; position: re
 
   function toggle(e: ThreeEvent<MouseEvent>) {
     e.stopPropagation();
+    if (editingLayout) {
+      onReposition?.();
+      return;
+    }
     if (sessionId) finish(sessionId, elapsed);
     else startSession.mutate("pomodoro", { onSuccess: (s) => setSessionId(s.id) });
   }
@@ -95,7 +115,13 @@ export function TimerObject({ userId, position }: { userId: string; position: re
         }}
       >
         <cylinderGeometry args={[0.13, 0.14, 0.055, 40]} />
-        <meshStandardMaterial color="#9aa09f" roughness={0.3} metalness={0.7} />
+        <meshStandardMaterial
+          color="#9aa09f"
+          emissive={editingLayout ? "#2d7d8e" : "#000000"}
+          emissiveIntensity={editingLayout ? 0.5 : 0}
+          roughness={0.3}
+          metalness={0.7}
+        />
       </mesh>
       {/* Digit face: a flat disc on the casing's top surface, textured with
           the canvas above — the "2D texture applied to the geometry's

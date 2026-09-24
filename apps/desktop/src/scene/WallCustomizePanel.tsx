@@ -1,6 +1,13 @@
 import { Html } from "@react-three/drei";
-import { DESK_WOOD_PRESETS, WALL_PRESETS, type DeskTheme } from "./disciplineTheme";
+import {
+  DESK_WOOD_PRESETS,
+  REVIEW_UNLOCK_THRESHOLD,
+  UNLOCKABLE_WALL_PRESET,
+  WALL_PRESETS,
+  type DeskTheme,
+} from "./disciplineTheme";
 import { useUpdateDeskTheme } from "../features/preferences/api";
+import { useCardStats } from "../features/review/api";
 
 function Swatch({ color, active, onClick }: { color: string; active: boolean; onClick: () => void }) {
   return (
@@ -21,6 +28,28 @@ function Swatch({ color, active, onClick }: { color: string; active: boolean; on
   );
 }
 
+function LockedSwatch({ remaining }: { remaining: number }) {
+  return (
+    <div
+      title={`Complete ${remaining} more review${remaining === 1 ? "" : "s"} to unlock`}
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: "50%",
+        background: "repeating-linear-gradient(45deg, #ddd, #ddd 3px, #eee 3px, #eee 6px)",
+        border: "2px solid rgba(0,0,0,.15)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 12,
+      }}
+      aria-label="Locked preset"
+    >
+      🔒
+    </div>
+  );
+}
+
 /**
  * Tier 7's user desk/wall customization — same swap mechanism as Tier 5
  * (a DeskTheme lookup threaded through DeskAndWall/SceneObjects), just with
@@ -31,13 +60,18 @@ function Swatch({ color, active, onClick }: { color: string; active: boolean; on
  * which a user picking "I like blue" shouldn't be able to override away.
  */
 export function WallCustomizePanel({
+  userId,
   position,
   theme,
 }: {
+  userId: string;
   position: readonly [number, number, number];
   theme: DeskTheme;
 }) {
   const updateDeskTheme = useUpdateDeskTheme();
+  const { data: stats } = useCardStats(userId);
+  const totalReviews = stats?.totalReviews ?? 0;
+  const unlocked = totalReviews >= REVIEW_UNLOCK_THRESHOLD;
 
   return (
     <Html position={position} transform distanceFactor={1.1} style={{ pointerEvents: "none" }}>
@@ -67,6 +101,15 @@ export function WallCustomizePanel({
               onClick={() => updateDeskTheme.mutate({ wall: color })}
             />
           ))}
+          {unlocked ? (
+            <Swatch
+              color={UNLOCKABLE_WALL_PRESET}
+              active={theme.wall === UNLOCKABLE_WALL_PRESET}
+              onClick={() => updateDeskTheme.mutate({ wall: UNLOCKABLE_WALL_PRESET })}
+            />
+          ) : (
+            <LockedSwatch remaining={Math.max(0, REVIEW_UNLOCK_THRESHOLD - totalReviews)} />
+          )}
         </div>
 
         <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6b6255" }}>Desk wood</p>

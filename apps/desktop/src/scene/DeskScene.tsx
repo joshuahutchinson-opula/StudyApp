@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { AnimatePresence } from "motion/react";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import type { Discipline } from "@the-desk/shared";
 import { useBinders } from "../features/binder/api";
 import { CameraRig } from "./CameraRig";
@@ -14,6 +14,10 @@ import { useExamMode } from "../hooks/useExamMode";
 import { DISCIPLINE_DESK_THEME, mergeDeskTheme, type DeskTheme } from "./disciplineTheme";
 import { WallCustomizePanel } from "./WallCustomizePanel";
 import { useAuthStore } from "../store/useAuthStore";
+import { LampLightDrift } from "./LampLightDrift";
+import { AmbientRecap } from "./AmbientRecap";
+import { TIMER_SLOTS, resolveTimerSlot } from "./deskLayout";
+import { useUpdateDeskLayout } from "../features/preferences/api";
 
 // All full-screen overlays are code-split — neither ships in the initial
 // bundle, same pattern the old dashboard used for Cytoscape (GraphView). The
@@ -179,11 +183,17 @@ function SceneObjects({
   discipline,
   binderId,
   theme,
+  editingLayout,
+  timerSlotIndex,
+  onCycleTimer,
 }: {
   userId: string;
   discipline: Discipline;
   binderId: string;
   theme: DeskTheme;
+  editingLayout: boolean;
+  timerSlotIndex: number;
+  onCycleTimer: () => void;
 }) {
   const goToBinder = useCameraStore((s) => s.goToBinder);
   const goToPlanner = useCameraStore((s) => s.goToPlanner);
@@ -195,13 +205,18 @@ function SceneObjects({
   const goToWall = useCameraStore((s) => s.goToWall);
   const state = useCameraStore((s) => s.state);
   const examMode = useExamMode(userId);
+  // While rearranging the desk, a misclick on another object shouldn't fly
+  // the camera away mid-edit — every OTHER object's navigation is disarmed
+  // for the duration (the timer's own click is handled separately, since
+  // it's the one object edit mode actually repositions).
+  const guard = (fn: () => void) => (editingLayout ? () => {} : fn);
 
   return (
     <>
-      <DeskAndWall theme={theme} onSelectWall={goToWall} />
+      <DeskAndWall theme={theme} onSelectWall={guard(goToWall)} />
       <LampMarker />
       {state === "WALL_FOCUS" && (
-        <WallCustomizePanel theme={theme} position={[1.6, 1.9, -2.17]} />
+        <WallCustomizePanel userId={userId} theme={theme} position={[1.6, 1.9, -2.17]} />
       )}
 
       <InteractiveBox
@@ -209,7 +224,7 @@ function SceneObjects({
         size={[0.32, 0.42, 0.06]}
         color={theme.binder}
         label="binder"
-        onSelect={() => goToBinder(binderId)}
+        onSelect={guard(() => goToBinder(binderId))}
       />
 
       <InteractiveBox
@@ -217,7 +232,7 @@ function SceneObjects({
         size={[0.9, 0.02, 0.6]}
         color={theme.planner}
         label="planner"
-        onSelect={goToPlanner}
+        onSelect={guard(goToPlanner)}
       />
       {/* The real task list only mounts while actually focused on the
           planner — real interactive DOM sitting tiny/occluded in the
@@ -234,17 +249,22 @@ function SceneObjects({
         size={[1.6, 1, 0.04]}
         color={theme.whiteboard}
         label="whiteboard"
-        onSelect={goToWhiteboard}
+        onSelect={guard(goToWhiteboard)}
       />
 
-      <TimerObject userId={userId} position={[OBJECT_LAYOUT.timer.x, OBJECT_LAYOUT.timer.y, OBJECT_LAYOUT.timer.z]} />
+      <TimerObject
+        userId={userId}
+        position={[resolveTimerSlot(timerSlotIndex).x, OBJECT_LAYOUT.timer.y, resolveTimerSlot(timerSlotIndex).z]}
+        editingLayout={editingLayout}
+        onReposition={onCycleTimer}
+      />
 
       <InteractiveBox
         position={[OBJECT_LAYOUT.recall.x, OBJECT_LAYOUT.recall.y, OBJECT_LAYOUT.recall.z]}
         size={[0.3, 0.08, 0.22]}
         color={theme.recall}
         label="recall"
-        onSelect={goToRecall}
+        onSelect={guard(goToRecall)}
       />
 
       <InteractiveBox
@@ -252,14 +272,14 @@ function SceneObjects({
         size={[0.28, 0.36, 0.09]}
         color={theme.textbook}
         label="textbook"
-        onSelect={goToTextbook}
+        onSelect={guard(goToTextbook)}
       />
 
       <DrawerFront
         position={[OBJECT_LAYOUT.drawer.x, OBJECT_LAYOUT.drawer.y, OBJECT_LAYOUT.drawer.z]}
         active={examMode.active}
         theme={theme}
-        onSelect={goToDrawer}
+        onSelect={guard(goToDrawer)}
       />
       {state === "DRAWER_FOCUS" && (
         <ExamDrawerPanel
@@ -276,7 +296,7 @@ function SceneObjects({
           size={[0.34, 0.08, 0.24]}
           color={theme.signature}
           label="signature"
-          onSelect={goToSignature}
+          onSelect={guard(goToSignature)}
         />
       )}
     </>
@@ -296,10 +316,15 @@ export function DeskScene({
   const overlay = useCameraStore((s) => s.overlay);
   const closeOverlay = useCameraStore((s) => s.closeOverlay);
   const undo = useCameraStore((s) => s.undo);
+  const requestSkip = useCameraStore((s) => s.requestSkip);
   const { data: binders } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
   const deskThemeOverride = useAuthStore((s) => s.user?.deskThemeOverride);
   const theme = mergeDeskTheme(DISCIPLINE_DESK_THEME[discipline], deskThemeOverride);
+  const deskLayoutOverride = useAuthStore((s) => s.user?.deskLayoutOverride);
+  const timerSlotIndex = deskLayoutOverride?.timer ?? 0;
+  const updateDeskLayout = useUpdateDeskLayout();
+  const [editingLayout, setEditingLayout] = useState(false);
 
   // Register the camera FSM's own undo stack with the Tier 3 global undo
   // router, so Ctrl+Z can route to "undo the last camera move" or "undo the
@@ -344,14 +369,10 @@ export function DeskScene({
         <ambientLight intensity={0.45} />
         {/* The scene's one primary light source: the desk lamp. Every
             shadow in the scene is cast by this light — no competing light
-            sources, per the brief. */}
-        <directionalLight
-          position={[OBJECT_LAYOUT.lamp.x, OBJECT_LAYOUT.lamp.y + 0.4, OBJECT_LAYOUT.lamp.z + 0.2]}
-          intensity={2.2}
-          color="#ffb347"
-          castShadow
-          shadow-mapSize={[1024, 1024]}
-        />
+            sources, per the brief. Tier 9's lighting drift lives in
+            LampLightDrift — same light, but its color/intensity now
+            follows the real time of day instead of a fixed value. */}
+        <LampLightDrift />
         {/* Real Poly Haven HDRI/PBR materials are a later pass, deliberately
             not here — drei's <Environment> fetches its map over the network,
             and r3f's <Canvas> wraps children in a Suspense boundary with no
@@ -362,8 +383,21 @@ export function DeskScene({
             real HDRI is added, wrap it alone in its own
             `<Suspense fallback={null}>` so a slow network fetch degrades to
             "no reflections yet," never to "the whole desk vanished." */}
-        <SceneObjects userId={userId} discipline={discipline} binderId={binder?.id ?? ""} theme={theme} />
+        <SceneObjects
+          userId={userId}
+          discipline={discipline}
+          binderId={binder?.id ?? ""}
+          theme={theme}
+          editingLayout={editingLayout}
+          timerSlotIndex={timerSlotIndex}
+          onCycleTimer={() => {
+            const next = (timerSlotIndex + 1) % TIMER_SLOTS.length;
+            updateDeskLayout.mutate({ timer: next });
+          }}
+        />
       </Canvas>
+
+      {state === "IDLE_WIDE" && <AmbientRecap userId={userId} discipline={discipline} />}
 
       <div
         style={{ position: "fixed", left: 16, top: 16, zIndex: 10, display: "flex", flexDirection: "column", gap: 4 }}
@@ -374,15 +408,45 @@ export function DeskScene({
       </div>
 
       <div style={{ position: "fixed", right: 16, top: 16, zIndex: 10, display: "flex", gap: 12, alignItems: "center" }}>
-        {state !== "IDLE_WIDE" && !overlay && (
+        {/* Tier 9's rearrangeable desk toggle — only meaningful at
+            IDLE_WIDE, where the timer (the one object with no dedicated
+            camera-approach state) is actually visible and clickable. */}
+        {state === "IDLE_WIDE" && (
           <button
             type="button"
-            onClick={undo}
+            onClick={() => setEditingLayout((v) => !v)}
             className="rounded-full px-3 py-1.5 text-xs"
-            style={{ background: "rgba(15,32,39,.7)", color: "#f3efe6" }}
+            style={{
+              background: editingLayout ? "#2d7d8e" : "rgba(15,32,39,.7)",
+              color: "#f3efe6",
+            }}
           >
-            ‹ Back
+            {editingLayout ? "Done arranging" : "Edit layout"}
           </button>
+        )}
+        {state !== "IDLE_WIDE" && !overlay && (
+          <>
+            {/* Tier 9's skip-animation QoL feature — snaps the in-flight
+                camera straight to its target instead of waiting out the
+                spring settle. Shown anywhere the spring might still be
+                moving, same condition as Back. */}
+            <button
+              type="button"
+              onClick={requestSkip}
+              className="rounded-full px-3 py-1.5 text-xs"
+              style={{ background: "rgba(15,32,39,.7)", color: "#f3efe6" }}
+            >
+              Skip ⏭
+            </button>
+            <button
+              type="button"
+              onClick={undo}
+              className="rounded-full px-3 py-1.5 text-xs"
+              style={{ background: "rgba(15,32,39,.7)", color: "#f3efe6" }}
+            >
+              ‹ Back
+            </button>
+          </>
         )}
         <button
           type="button"

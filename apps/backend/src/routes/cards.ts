@@ -81,4 +81,17 @@ export async function cardRoutes(app: FastifyInstance) {
 
     return updated;
   });
+
+  // Tier 9's unlocks system: a real, computed-from-actual-history stat
+  // (total reviews across every card, every discipline) rather than a
+  // separate "achievements" table to maintain in parallel — the unlock
+  // threshold is just a client-side comparison against this number.
+  app.get("/cards/stats", async (req, reply) => {
+    if (!req.userId) return reply.code(401).send({ error: "Not authenticated" });
+    const agg = await db.spacedRepetitionCard.aggregate({
+      where: { userId: req.userId },
+      _sum: { reviewCount: true },
+    });
+    return { totalReviews: agg._sum.reviewCount ?? 0 };
+  });
 }

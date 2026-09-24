@@ -3,6 +3,16 @@ import type { Discipline } from "@the-desk/shared";
 import { api } from "../../api/client";
 import type { ReviewGrade, SpacedRepetitionCard } from "./types";
 
+/** Tier 9's unlocks system: a real, computed-from-history stat (total
+ * reviews across every card, every discipline) rather than a separate
+ * achievements table — see backend routes/cards.ts's GET /cards/stats. */
+export function useCardStats(userId: string) {
+  return useQuery({
+    queryKey: ["cards", "stats", userId],
+    queryFn: () => api.get<{ totalReviews: number }>("/cards/stats"),
+  });
+}
+
 export function useDueCards(userId: string, discipline: Discipline) {
   return useQuery({
     queryKey: ["cards", "due", userId, discipline],

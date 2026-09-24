@@ -66,6 +66,13 @@ model User {
   // scene/disciplineTheme.ts), merged on top of the discipline default
   // rather than replacing it. Null means "just use the discipline default."
   deskThemeOverride Json?
+  // Tier 9's rearrangeable desk: { [objectKey]: slotIndex }. Deliberately
+  // limited to objects with NO dedicated camera-approach state (currently
+  // just the timer) — every approach state's camera target is hand-placed
+  // and fixed per the brief ("never computed at runtime"), so an object
+  // that has one can't be freely repositioned without desyncing its
+  // camera's framing from where the object actually sits.
+  deskLayoutOverride Json?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
