@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { CameraStateId } from "./cameraStates";
 
-export type OverlayId = "binder" | "whiteboard" | "recall" | "textbook" | "signature" | null;
+export type OverlayId = "binder" | "whiteboard" | "recall" | "textbook" | "signature" | "graph" | null;
 
 interface CameraHistoryEntry {
   state: CameraStateId;
@@ -14,6 +14,11 @@ interface CameraStore {
    * pick RETURN_SPRING instead of APPROACH_SPRING for this one hop. */
   returning: boolean;
   binderId: string | null;
+  /** Tier 10: which page the binder should jump straight to on open, set
+   * when arriving via the knowledge graph's "open this note" action rather
+   * than a plain binder click. Cleared (implicitly, by every OTHER goTo*
+   * setting it to null) as soon as any other navigation happens. */
+  initialPageId: string | null;
   /** Which 2D overlay is mounted full-screen, if any. Approach states are
    * one-way/self-terminating: the rig sets this once the camera settles. */
   overlay: OverlayId;
@@ -38,13 +43,14 @@ interface CameraStore {
    * so the rig doesn't re-snap every subsequent frame. */
   clearSkip: () => void;
   goToPlanner: () => void;
-  goToBinder: (binderId: string) => void;
+  goToBinder: (binderId: string, initialPageId?: string) => void;
   goToWhiteboard: () => void;
   goToRecall: () => void;
   goToTextbook: () => void;
   goToDrawer: () => void;
   goToWall: () => void;
   goToSignature: () => void;
+  goToGraph: () => void;
   settleOverlay: () => void;
   closeOverlay: () => void;
   undo: () => void;
@@ -56,6 +62,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
   state: "IDLE_WIDE",
   returning: false,
   binderId: null,
+  initialPageId: null,
   overlay: null,
   history: [],
   lastActionAt: null,
@@ -75,12 +82,13 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     });
   },
 
-  goToBinder: (id) => {
+  goToBinder: (id, initialPageId) => {
     const { state, binderId, history } = get();
     set({
       state: "BINDER_APPROACH",
       returning: false,
       binderId: id,
+      initialPageId: initialPageId ?? null,
       overlay: null,
       history: [...history, { state, binderId }].slice(-MAX_HISTORY),
       lastActionAt: Date.now(),
@@ -161,6 +169,18 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     });
   },
 
+  goToGraph: () => {
+    const { state, binderId, history } = get();
+    set({
+      state: "GRAPH_APPROACH",
+      returning: false,
+      binderId: null,
+      overlay: null,
+      history: [...history, { state, binderId }].slice(-MAX_HISTORY),
+      lastActionAt: Date.now(),
+    });
+  },
+
   // Fired by CameraRig once an approach state's camera has actually settled
   // at its target — the one-way/self-terminating handoff into the 2D overlay.
   settleOverlay: () => {
@@ -170,6 +190,7 @@ export const useCameraStore = create<CameraStore>((set, get) => ({
     else if (state === "RECALL_APPROACH") set({ overlay: "recall" });
     else if (state === "TEXTBOOK_APPROACH") set({ overlay: "textbook" });
     else if (state === "SIGNATURE_APPROACH") set({ overlay: "signature" });
+    else if (state === "GRAPH_APPROACH") set({ overlay: "graph" });
   },
 
   // Closing an overlay (or clicking away) reverses to IDLE_WIDE, faster than

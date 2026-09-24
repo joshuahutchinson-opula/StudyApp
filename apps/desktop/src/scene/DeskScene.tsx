@@ -30,6 +30,9 @@ const TextbookOverlay = lazy(() => import("./TextbookOverlay").then((m) => ({ de
 const SignatureFeatureOverlay = lazy(() =>
   import("./SignatureFeatureOverlay").then((m) => ({ default: m.SignatureFeatureOverlay })),
 );
+const GraphOverlay = lazy(() => import("./GraphOverlay").then((m) => ({ default: m.GraphOverlay })));
+
+const GRAPH_COLOR = "#6b7fd7";
 
 // The three disciplines with a standalone signature-feature "room" — see
 // SignatureFeatureOverlay.tsx for why Software/Engineering aren't here.
@@ -200,6 +203,7 @@ function SceneObjects({
   const goToWhiteboard = useCameraStore((s) => s.goToWhiteboard);
   const goToRecall = useCameraStore((s) => s.goToRecall);
   const goToSignature = useCameraStore((s) => s.goToSignature);
+  const goToGraph = useCameraStore((s) => s.goToGraph);
   const goToTextbook = useCameraStore((s) => s.goToTextbook);
   const goToDrawer = useCameraStore((s) => s.goToDrawer);
   const goToWall = useCameraStore((s) => s.goToWall);
@@ -299,6 +303,16 @@ function SceneObjects({
           onSelect={guard(goToSignature)}
         />
       )}
+
+      {/* Tier 10's knowledge graph — no design reference exists yet, so this
+          is a placeholder box like every other object was at Tier 1/2. */}
+      <InteractiveBox
+        position={[OBJECT_LAYOUT.graph.x, OBJECT_LAYOUT.graph.y, OBJECT_LAYOUT.graph.z]}
+        size={[0.3, 0.05, 0.3]}
+        color={GRAPH_COLOR}
+        label="graph"
+        onSelect={guard(goToGraph)}
+      />
     </>
   );
 }
@@ -317,6 +331,7 @@ export function DeskScene({
   const closeOverlay = useCameraStore((s) => s.closeOverlay);
   const undo = useCameraStore((s) => s.undo);
   const requestSkip = useCameraStore((s) => s.requestSkip);
+  const initialPageId = useCameraStore((s) => s.initialPageId);
   const { data: binders } = useBinders(userId);
   const binder = binders?.find((b) => b.discipline === discipline);
   const deskThemeOverride = useAuthStore((s) => s.user?.deskThemeOverride);
@@ -478,7 +493,13 @@ export function DeskScene({
             }
           >
             {overlay === "binder" && (
-              <BinderOverlay key="binder" userId={userId} discipline={discipline} onClose={closeOverlay} />
+              <BinderOverlay
+                key="binder"
+                userId={userId}
+                discipline={discipline}
+                initialPageId={initialPageId ?? undefined}
+                onClose={closeOverlay}
+              />
             )}
             {overlay === "whiteboard" && (
               <WhiteboardOverlay key="whiteboard" userId={userId} onClose={closeOverlay} />
@@ -491,6 +512,9 @@ export function DeskScene({
             )}
             {overlay === "signature" && (
               <SignatureFeatureOverlay key="signature" userId={userId} discipline={discipline} onClose={closeOverlay} />
+            )}
+            {overlay === "graph" && (
+              <GraphOverlay key="graph" userId={userId} discipline={discipline} onClose={closeOverlay} />
             )}
           </Suspense>
         )}

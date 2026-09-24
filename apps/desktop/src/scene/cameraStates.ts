@@ -13,7 +13,8 @@ export type CameraStateId =
   | "TEXTBOOK_APPROACH"
   | "DRAWER_FOCUS"
   | "WALL_FOCUS"
-  | "SIGNATURE_APPROACH";
+  | "SIGNATURE_APPROACH"
+  | "GRAPH_APPROACH";
 // RETURN is not a distinct resting state — it's a transition tagged onto
 // whatever state IDLE_WIDE is reached through, so it can use its own (faster)
 // spring constants. See useCameraStore's `returnToIdle`.
@@ -103,6 +104,16 @@ export const CAMERA_TARGETS: Record<CameraStateId, CameraTarget> = {
     lookAt: { x: -0.55, y: 0.95, z: 0.9 },
     fov: 38,
   },
+  // Tier 10's knowledge graph — flagged in the brief as having no design
+  // reference yet; placed as an ordinary desk object (not the wall, to keep
+  // that surface free for Tier 7's wall-click customization target) using
+  // the same hand-placed BINDER_APPROACH-style offset as every other desk
+  // object, pending an actual design pass.
+  GRAPH_APPROACH: {
+    position: { x: 1.6, y: 1.14, z: 2.2 },
+    lookAt: { x: 1.6, y: 0.94, z: 0.85 },
+    fov: 38,
+  },
 };
 
 // Which desk objects live at which resting spots — placeholder geometry uses
@@ -131,4 +142,6 @@ export const OBJECT_LAYOUT = {
   // already reachable inline on every relevant binder page, so they don't
   // need a second entry point.
   signature: { x: -0.55, y: 0.46, z: 0.95 },
+  // Tier 10 — placeholder position, no design reference exists yet.
+  graph: { x: 1.6, y: 0.44, z: 0.85 },
 } as const;

@@ -17,10 +17,14 @@ import { ReviewSession } from "../features/review/ReviewSession";
 export function BinderOverlay({
   userId,
   discipline,
+  initialPageId,
   onClose,
 }: {
   userId: string;
   discipline: Discipline;
+  /** Tier 10: jump straight to this page — set when arriving via the
+   * knowledge graph's "open this note" action. */
+  initialPageId?: string;
   onClose: () => void;
 }) {
   const [subView, setSubView] = useState<"binder" | "review">("binder");
@@ -62,6 +66,7 @@ export function BinderOverlay({
           userId={userId}
           binderId={binder.id}
           discipline={discipline}
+          initialPageId={initialPageId}
           onOpenReview={() => setSubView("review")}
         />
       )}
