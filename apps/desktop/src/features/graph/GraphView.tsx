@@ -81,6 +81,11 @@ export function GraphView({
       elements,
       style: [
         {
+          // Asset pass (stretch goal, lowest priority per the brief): real
+          // depth cues instead of flat gray dots — a drop shadow so each
+          // node reads as a raised marker, not a sticker painted onto the
+          // canvas. Cytoscape's canvas renderer supports shadow-* natively,
+          // this isn't a CSS box-shadow trick layered on top.
           selector: "node[kind]",
           style: {
             shape: (el: NodeSingular) => KIND_SHAPE[el.data("kind") as GraphNodeDto["kind"]] as never,
@@ -92,8 +97,18 @@ export function GraphView({
             color: colorText,
             "text-valign": "bottom",
             "text-margin-y": 4,
-            "border-width": 1.5,
+            "border-width": 2,
             "border-color": colorSurface,
+            // cytoscape's own TS defs don't cover shadow-* even though the
+            // canvas renderer has supported it since v3 — same "types don't
+            // fully cover the real API" situation as the `shape` cast above.
+            ...({
+              "shadow-blur": 6,
+              "shadow-color": "#000000",
+              "shadow-opacity": 0.35,
+              "shadow-offset-x": 0,
+              "shadow-offset-y": 2,
+            } as unknown as Record<string, never>),
           },
         },
         {
@@ -103,6 +118,12 @@ export function GraphView({
             "background-opacity": 0.6,
             "border-width": 1,
             "border-color": colorBorder,
+            ...({
+              "shadow-blur": 10,
+              "shadow-color": "#000000",
+              "shadow-opacity": 0.12,
+              "shadow-offset-y": 3,
+            } as unknown as Record<string, never>),
             // Reserves margin inside each cluster's boundary — cose accounts
             // for this when packing compounds, which is a more predictable
             // way to keep adjacent small clusters from touching than tuning
@@ -121,6 +142,7 @@ export function GraphView({
           style: {
             width: 1,
             "line-color": colorBorder,
+            "line-cap": "round",
             "curve-style": "bezier",
             "target-arrow-shape": "none",
           },
